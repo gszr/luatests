@@ -3,9 +3,10 @@
 LUA_DIR = ../..
 
 CC = gcc
+MYCFLAGS = -DLUA_NO_FLOAT
 
 # compilation should generate Dynamic-Link Libraries
-CFLAGS = -Wall -std=gnu99 -O2 -I$(LUA_DIR) -fpic -shared
+CFLAGS = -Wall -std=gnu99 -O2 -I$(LUA_DIR) -fpic -shared $(MYCFLAGS)
 
 # libraries used by the tests
 all: lib1.so lib11.so lib2.so lib21.so lib2-v2.so
@@ -24,3 +25,8 @@ lib21.so: lib21.c
 
 lib2-v2.so: lib2.so
 	mv lib2.so ./lib2-v2.so
+
+clean:
+	$(RM) *.so
+
+.PHONY: clean
