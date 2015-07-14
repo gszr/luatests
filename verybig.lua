@@ -33,12 +33,16 @@ local function foo ()
      241, 242, 243, 244, 245, 246, 247, 248,
      249, 250, 251, 252, 253, 254, 255, 256,
   }
-  assert(24.5 + 0.6 == 25.1)
+  if not _KERNEL then
+  eval('assert(24.5 + 0.6 == 25.1)')
+  end
   local t = {foo = function (self, x) return x + self.x end, x = 10}
   t.t = t
-  assert(t:foo(1.5) == 11.5)
-  assert(t.t:foo(0.5) == 10.5)   -- bug in 5.2 alpha
-  assert(24.3 == 24.3)
+  if not _KERNEL then
+  eval('assert(t:foo(1.5) == 11.5)')
+  eval('assert(t.t:foo(0.5) == 10.5)')   -- bug in 5.2 alpha
+  eval('assert(24.3 == 24.3)')
+  end
   assert((function () return t.x end)() == 10)
 end
 
@@ -51,6 +55,7 @@ if _soft then return 10 end
 print "testing large programs (>64k)"
 
 -- template to create a very big test file
+if not _KERNEL then
 prog = [[$
 
 local a,b
@@ -110,6 +115,59 @@ xxxx = nil
 return 10
 
 ]]
+else
+prog = [[$
+
+local a,b
+
+b = {$1$
+  b30009 = 65534,
+  b30010 = 65535,
+  b30011 = 65536,
+  b30012 = 65537,
+  b30013 = 16777214,
+  b30014 = 16777215,
+  b30015 = 16777216,
+  b30016 = 16777217,
+  b30017 = 0x7fffff,
+  b30018 = -0x7fffff,
+  b30019 = 0x1ffffff,
+  b30020 = -0x1ffffd,
+  b30021 = -65534,
+  b30022 = -65535,
+  b30023 = -65536,
+  b30024 = -0xffffff,
+  $2$
+};
+
+assert(b["b"..30024] == -0xffffff)
+
+function b:xxx (a,b) return a+b end
+assert(b:xxx(10, 12) == 22)   -- pushself with non-constant index
+b.xxx = nil
+
+a = nil; b = nil
+print'+'
+
+function f(x) b=x end
+
+a = f{$3$} or 10
+
+assert(a==10)
+assert(b[1] == "a10" and b[2] == 5 and b[#b-1] == "a50009")
+
+
+function xxxx (x) return b[x] end
+
+assert(xxxx(3) == "a11")
+
+a = nil; b=nil
+xxxx = nil
+
+return 10
+
+]]
+end
 
 -- functions to fill in the $n$
 

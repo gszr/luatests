@@ -145,9 +145,11 @@ function f(x)
   end
 end
 
+if not _KERNEL then
 y = f(10)
-w = 1.345
+w = eval('return 1.345')
 assert(y(20)(30) == 60+w)
+end
 
 -- testing closures x repeat-until
 

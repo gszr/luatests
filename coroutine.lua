@@ -101,7 +101,11 @@ function filter (p, g)
     while 1 do
       local n = g()
       if n == nil then return end
+      if not _KERNEL then
       if math.fmod(n, p) ~= 0 then coroutine.yield(n) end
+      else
+      if (n - (n//p) * p) ~= 0 then coroutine.yield(n) end
+      end
     end
   end)
 end
@@ -214,7 +218,9 @@ local a = 0
 for t in coroutine.wrap(function () all({}, 5, 4) end) do
   a = a+1
 end
-assert(a == 5^4)
+--TODO int exp
+--assert(a == 5^4)
+assert(a == 625)
 
 
 -- access to locals of collected corroutines
@@ -464,7 +470,9 @@ _X()
 
 if not _soft then
   -- bug (stack overflow)
-  local j = 2^9
+  -- TODO: int exp
+  --local j = 2^9
+  local j = 512
   local lim = 1000000    -- (C stack limit; assume 32-bit machine)
   local t = {lim - 10, lim - 5, lim - 1, lim, lim + 1}
   for i = 1, #t do
@@ -549,15 +557,15 @@ assert(run(function () if (a<=b) then return '<=' else return '>' end end,
 assert(run(function () if (a==b) then return '==' else return '~=' end end,
        {"eq"}) == "~=")
 
-assert(run(function () return a & b + a end, {"add", "band"}) == 2)
+assert(run(function () return a & (b + a) end, {"add", "band"}) == 2)
 
 assert(run(function () return a % b end, {"mod"}) == 10)
 
-assert(run(function () return ~a & b end, {"bnot", "band"}) == ~10 & 12)
-assert(run(function () return a | b end, {"bor"}) == 10 | 12)
-assert(run(function () return a ~ b end, {"bxor"}) == 10 ~ 12)
-assert(run(function () return a << b end, {"shl"}) == 10 << 12)
-assert(run(function () return a >> b end, {"shr"}) == 10 >> 12)
+assert(run(function () return ~a & b end, {"bnot", "band"}) == (~10 & 12))
+assert(run(function () return a | b end, {"bor"}) == (10 | 12))
+assert(run(function () return a ~ b end, {"bxor"}) == (10 ~ 12))
+assert(run(function () return a << b end, {"shl"}) == (10 << 12))
+assert(run(function () return a >> b end, {"shr"}) == (10 >> 12))
 
 assert(run(function () return a..b end, {"concat"}) == "1012")
 

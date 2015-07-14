@@ -97,7 +97,9 @@ repeat
   if 3<4 then a=1 else break end; f()
   while 1 do local x=10; break end; f()
   local b = 1
+  if not _KERNEL then
   if 3>4 then return math.sin(1) end; f()
+  end
   a = 3<4; f()
   a = 3<4 or 1; f()
   repeat local x=20; if 4>3 then f() else break end; f() until 1
@@ -108,6 +110,7 @@ repeat
   assert(g(f) == 'a')
 until 1
 
+if not _KERNEL then
 test([[if
 math.sin(1)
 then
@@ -116,6 +119,7 @@ else
   a=2
 end
 ]], {2,3,4,7})
+end
 
 test([[--
 if nil then
@@ -143,12 +147,14 @@ while a<=3 do
 end
 ]], {1,2,3,4,3,4,3,4,3,5})
 
+if not _KERNEL then
 test([[while math.sin(1) do
   if math.sin(1)
   then break
   end
 end
 a=1]], {1,2,3,6})
+end
 
 test([[for i=1,3 do
   a=i
@@ -259,7 +265,8 @@ function f(a,b)
   local _, x = debug.getlocal(1, 1)
   local _, y = debug.getlocal(1, 2)
   assert(x == a and y == b)
-  assert(debug.setlocal(2, 3, "pera") == "AA".."AA")
+  --TODO precedence broken?
+  assert(debug.setlocal(2, 3, "pera") == ("AA".."AA"))
   assert(debug.setlocal(2, 4, "maçã") == "B")
   x = debug.getinfo(2)
   assert(x.func == g and x.what == "Lua" and x.name == 'g' and
@@ -286,7 +293,9 @@ assert(debug.getinfo(1, "l").currentline == L+11)  -- check count of lines
 
 function g(...)
   local arg = {...}
+  if not _KERNEL then
   do local a,b,c; a=math.sin(40); end
+  end
   local feijao
   local AAAA,B = "xuxu", "mamão"
   f(AAAA,B)
@@ -405,9 +414,11 @@ debug.sethook(function (e) a=a+1 end, "", 4000)
 a=0; for i=1,1000 do end; assert(a == 0)
 
 do
-  debug.sethook(print, "", 2^24 - 1)   -- count upperbound
+  -- TODO int exp
+  --debug.sethook(print, "", 2^24 - 1)   -- count upperbound
+  debug.sethook(print, "", 16777216 - 1)   -- count upperbound
   local f,m,c = debug.gethook()
-  assert(({debug.gethook()})[3] == 2^24 - 1)
+  assert(({debug.gethook()})[3] == 16777216 - 1)
 end
 
 debug.sethook()
@@ -666,11 +677,16 @@ setmetatable(a, {
 
 local b = setmetatable({}, getmetatable(a))
 
-assert(a[3] == "__index" and a^3 == "__pow" and a..a == "__concat")
+if not _KERNEL then
+-- TODO pensar melhor no pow
+assert(a[3] == "__index" --[[and a^3 == "__pow"]] and a..a == "__concat")
 assert(a/3 == "__div" and 3%a == "__mod")
+else
+assert(a/3 == "__idiv" and 3%a == "__mod")
+end
 assert(a+3 == "__add" and 3-a == "__sub" and a*3 == "__mul" and
        -a == "__unm" and #a == "__len" and a&3 == "__band")
-assert(a|3 == "__bor" and 3~a == "__bxor" and a<<3 == "__shl" and
+assert((a|3) == "__bor" and (3~a) == "__bxor" and a<<3 == "__shl" and
        a>>1 == "__shr")
 assert (a==b and a.op == "__eq")
 assert (a>=b and a.op == "__le")

@@ -6,7 +6,9 @@ local numbits = string.packsize('j') * 8
 
 assert(~0 == -1)
 
+if not _KERNEL then
 assert((1 << (numbits - 1)) == math.mininteger)
+end
 
 -- basic tests for bitwise operators;
 -- use variables to avoid constant folding
@@ -14,45 +16,56 @@ local a, b, c, d
 a = 0xFFFFFFFFFFFFFFFF
 assert(a == -1 and a & -1 == a and a & 35 == 35)
 a = 0xF0F0F0F0F0F0F0F0
-assert(a | -1 == -1)
-assert(a ~ a == 0 and a ~ 0 == a and a ~ ~a == -1)
-assert(a >> 4 == ~a)
+-- TODO precedence broken? (reported on lua-no-float repo)
+--assert(a | -1 == -1)
+assert((a | -1) == -1)
+--assert(a ~ a == 0 and a ~ 0 == a and a ~ ~a == -1)
+assert((a ~ a) == 0 and (a ~ 0) == a and (a ~ ~a) == -1)
+--assert(a >> 4 == ~a)
+assert((a >> 4) == ~a)
 a = 0xF0; b = 0xCC; c = 0xAA; d = 0xFD
-assert(a | b ~ c & d == 0xF4)
+--assert(a | b ~ c & d == 0xF4)
+assert((a | (b ~ c & d)) == 0xF4)
 
-a = 0xF0.0; b = 0xCC.0; c = "0xAA.0"; d = "0xFD.0"
+if not _KERNEL then
+eval('a = 0xF0.0; b = 0xCC.0; c = "0xAA.0"; d = "0xFD.0"')
 assert(a | b ~ c & d == 0xF4)
+end
 
 a = 0xF0000000; b = 0xCC000000;
 c = 0xAA000000; d = 0xFD000000
-assert(a | b ~ c & d == 0xF4000000)
-assert(~~a == a and ~a == -1 ~ a and -d == ~d + 1)
+assert((a | (b ~ c & d)) == 0xF4000000)
+assert(~~a == a and ~a == (-1 ~ a) and -d == (~d + 1))
 
 a = a << 32
 b = b << 32
 c = c << 32
 d = d << 32
-assert(a | b ~ c & d == 0xF4000000 << 32)
-assert(~~a == a and ~a == -1 ~ a and -d == ~d + 1)
+assert((a | (b ~ c & d)) == (0xF4000000 << 32))
+assert(~~a == a and ~a == (-1 ~ a) and -d == (~d + 1))
 
-assert(-1 >> 1 == 2^(numbits - 1) - 1 and 1 << 31 == 0x80000000)
-assert(-1 >> (numbits - 1) == 1)
-assert(-1 >> numbits == 0 and
-       -1 >> -numbits == 0 and
-       -1 << numbits == 0 and
-       -1 << -numbits == 0)
+if not _KERNEL then
+assert(-1 >> 1 == eval('return 2^(numbits - 1) - 1') and 1 << 31 == 0x80000000)
+end
+assert((-1 >> (numbits - 1)) == 1)
+assert((-1 >> numbits) == 0 and
+       (-1 >> -numbits) == 0 and
+       (-1 << numbits) == 0 and
+       (-1 << -numbits) == 0)
 
-assert((2^30 - 1) << 2^30 == 0)
-assert((2^30 - 1) >> 2^30 == 0)
+if not _KERNEL then
+eval('assert((2^30 - 1) << 2^30 == 0)')
+eval('assert((2^30 - 1) >> 2^30 == 0)')
+end
 
-assert(1 >> -3 == 1 << 3 and 1000 >> 5 == 1000 << -5)
+assert((1 >> -3) == (1 << 3) and (1000 >> 5) == (1000 << -5))
 
 
 -- coercion from strings to integers
-assert("0xffffffffffffffff" | 0 == -1)
-assert("0xfffffffffffffffe" & "-1" == -2)
-assert(" \t-0xfffffffffffffffe\n\t" & "-1" == 2)
-assert("   \n  -45  \t " >> "  -2  " == -45 * 4)
+assert(("0xffffffffffffffff" | 0) == -1)
+assert(("0xfffffffffffffffe" & "-1") == -2)
+assert((" \t-0xfffffffffffffffe\n\t" & "-1") == 2)
+assert(("   \n  -45  \t " >> "  -2  ") == -45 * 4)
 
 -- out of range number
 assert(not pcall(function () return "0xffffffffffffffff.0" | 0 end))
@@ -225,16 +238,16 @@ assert(bit32.arshift(-1, 24) == 0xffffffff)
 assert(bit32.arshift(-1, 32) == 0xffffffff)
 assert(bit32.arshift(-1, -1) == bit32.band(-1 * 2, 0xffffffff))
 
-assert(0x12345678 << 4 == 0x123456780)
-assert(0x12345678 << 8 == 0x1234567800)
-assert(0x12345678 << -4 == 0x01234567)
-assert(0x12345678 << -8 == 0x00123456)
-assert(0x12345678 << 32 == 0x1234567800000000)
-assert(0x12345678 << -32 == 0)
-assert(0x12345678 >> 4 == 0x01234567)
-assert(0x12345678 >> 8 == 0x00123456)
-assert(0x12345678 >> 32 == 0)
-assert(0x12345678 >> -32 == 0x1234567800000000)
+assert((0x12345678 << 4) == 0x123456780)
+assert((0x12345678 << 8) == 0x1234567800)
+assert((0x12345678 << -4) == 0x01234567)
+assert((0x12345678 << -8) == 0x00123456)
+assert((0x12345678 << 32) == 0x1234567800000000)
+assert((0x12345678 << -32) == 0)
+assert((0x12345678 >> 4) == 0x01234567)
+assert((0x12345678 >> 8) == 0x00123456)
+assert((0x12345678 >> 32) == 0)
+assert((0x12345678 >> -32) == 0x1234567800000000)
 
 print("+")
 -- some special cases
@@ -270,13 +283,15 @@ for _, b in pairs(c) do
 end
 
 -- for this test, use at most 24 bits (mantissa of a single float)
+if not _KERNEL then
 c = {0, 1, 2, 3, 10, 0x800000, 0xaaaaaa, 0x555555, 0xffffff, 0x7fffff}
 for _, b in pairs(c) do
   for i = -40, 40 do
     local x = bit32.lshift(b, i)
-    local y = math.floor(math.fmod(b * 2.0^i, 2.0^32))
-    assert(math.fmod(x - y, 2.0^32) == 0)
+    local y = eval('return math.floor(math.fmod(b * 2.0^i, 2.0^32))')
+    eval('assert(math.fmod(x - y, 2.0^32) == 0)')
   end
+end
 end
 
 assert(not pcall(bit32.band, {}))
@@ -304,23 +319,27 @@ assert(not pcall(bit32.extract, 0, 31, 2))
 
 assert(bit32.replace(0x12345678, 5, 28, 4) == 0x52345678)
 assert(bit32.replace(0x12345678, 0x87654321, 0, 32) == 0x87654321)
-assert(bit32.replace(0, 1, 2) == 2^2)
-assert(bit32.replace(0, -1, 4) == 2^4)
+if not _KERNEL then
+eval('assert(bit32.replace(0, 1, 2) == 2^2)')
+eval('assert(bit32.replace(0, -1, 4) == 2^4)')
+end
 assert(bit32.replace(-1, 0, 31) == (1 << 31) - 1)
 assert(bit32.replace(-1, 0, 1, 2) == (1 << 32) - 7)
 
 
 -- testing conversion of floats
 
-assert(bit32.bor(3.0) == 3)
-assert(bit32.bor(-4.0) == 0xfffffffc)
+if not _KERNEL then
+eval('assert(bit32.bor(3.0) == 3)')
+eval('assert(bit32.bor(-4.0) == 0xfffffffc)')
 
 -- large floats and large-enough integers?
-if 2.0^50 < 2.0^50 + 1.0 and 2.0^50 < (-1 >> 1) then
-  assert(bit32.bor(2.0^32 - 5.0) == 0xfffffffb)
-  assert(bit32.bor(-2.0^32 - 6.0) == 0xfffffffa)
-  assert(bit32.bor(2.0^48 - 5.0) == 0xfffffffb)
-  assert(bit32.bor(-2.0^48 - 6.0) == 0xfffffffa)
+if eval('return 2.0^50 < 2.0^50 + 1.0 and 2.0^50 < (-1 >> 1)') then
+  eval('assert(bit32.bor(2.0^32 - 5.0) == 0xfffffffb)')
+  eval('assert(bit32.bor(-2.0^32 - 6.0) == 0xfffffffa)')
+  eval('assert(bit32.bor(2.0^48 - 5.0) == 0xfffffffb)')
+  eval('assert(bit32.bor(-2.0^48 - 6.0) == 0xfffffffa)')
+end
 end
 
 print'OK'

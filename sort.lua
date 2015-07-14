@@ -38,6 +38,7 @@ assert(a==1 and x==nil)
 a,x = unpack({1,2}, 1, 1)
 assert(a==1 and x==nil)
 
+if not _KERNEL then
 do
   local maxI = math.maxinteger
   local minI = math.mininteger
@@ -62,10 +63,11 @@ do
   a, b = unpack(t, maxI - 1, maxI); assert(a == 12 and b == 23)
   a, b = unpack(t, maxI, maxI); assert(a == 23 and b == nil)
   a, b = unpack(t, maxI, maxI - 1); assert(a == nil and b == nil)
-  t = {[minI] = 12.3, [minI + 1] = 23.5}
+  --[[t = {[minI] = 12.3, [minI + 1] = 23.5}
   a, b = unpack(t, minI, minI + 1); assert(a == 12.3 and b == 23.5)
-  a, b = unpack(t, minI, minI); assert(a == 12.3 and b == nil)
+  a, b = unpack(t, minI, minI); assert(a == 12.3 and b == nil)]]
   a, b = unpack(t, minI + 1, minI); assert(a == nil and b == nil)
+end
 end
 
 do   -- length is not an integer
@@ -105,10 +107,12 @@ do
   a = table.move({10,20,30}, 1, 0, 3)   -- do not move
   eqT(a, {10,20,30})
 
+  if not _KERNEL then
   local max = math.maxinteger
   a = table.move({[max - 2] = 1, [max - 1] = 2, [max] = 3},
         max - 2, max, -10, {})
   eqT(a, {[-10] = 1, [-9] = 2, [-8] = 3})
+  end
 
   a = setmetatable({}, {
         __index = function (_,k) return k * 10 end,
@@ -187,29 +191,46 @@ limit = 30000
 if _soft then limit = 5000 end
 
 a = {}
+if not _KERNEL then
 for i=1,limit do
   a[i] = math.random()
+end
 end
 
 local x = os.clock()
 table.sort(a)
+if not _KERNEL then
 print(string.format("Sorting %d elements in %.2f sec.", limit, os.clock()-x))
+else
+print(string.format("Sorting %d elements in %d sec.", limit, os.clock()-x))
+end
 check(a)
 
 x = os.clock()
 table.sort(a)
+if not _KERNEL then
 print(string.format("Re-sorting %d elements in %.2f sec.", limit, os.clock()-x))
+else
+print(string.format("Re-sorting %d elements in %d sec.", limit, os.clock()-x))
+end
 check(a)
 
 a = {}
+if not _KERNEL then
 for i=1,limit do
   a[i] = math.random()
+end
 end
 
 x = os.clock(); i=0
 table.sort(a, function(x,y) i=i+1; return y<x end)
+if not _KERNEL then
 print(string.format("Invert-sorting other %d elements in %.2f sec., with %i comparisons",
       limit, os.clock()-x, i))
+else
+print(string.format("Invert-sorting other %d elements in %d sec., with %i comparisons",
+      limit, os.clock()-x, i))
+end
 check(a, function(x,y) return y<x end)
 
 
@@ -218,7 +239,11 @@ table.sort{}  -- empty array
 for i=1,limit do a[i] = false end
 x = os.clock();
 table.sort(a, function(x,y) return nil end)
+if not _KERNEL then
 print(string.format("Sorting %d equal elements in %.2f sec.", limit, os.clock()-x))
+else
+print(string.format("Sorting %d equal elements in %d sec.", limit, os.clock()-x))
+end
 check(a, function(x,y) return nil end)
 for i,v in pairs(a) do assert(not v or i=='n' and v==limit) end
 
@@ -235,7 +260,9 @@ table.sort(A, function (x, y)
 
 tt = {__lt = function (a,b) return a.val < b.val end}
 a = {}
+if not _KERNEL then
 for i=1,10 do  a[i] = {val=math.random(100)}; setmetatable(a[i], tt); end
+end
 table.sort(a)
 check(a, tt.__lt)
 check(a)

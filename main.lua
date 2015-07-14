@@ -115,9 +115,11 @@ RUN('env LUA_INIT= LUA_CPATH_5_3=yacc LUA_CPATH=x lua %s > %s', prog, out)
 checkout("yacc\n")
 
 -- test LUA_INIT (and its access to 'arg' table)
+if not _KERNEL then
 prepfile("print(X)")
 RUN('env LUA_INIT="X=tonumber(arg[1])" lua %s 3.2 > %s', prog, out)
 checkout("3.2\n")
+end
 
 -- test LUA_INIT_version
 prepfile("print(X)")

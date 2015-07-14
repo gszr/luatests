@@ -22,9 +22,9 @@ assert("\09912" == 'c12')
 assert("\99ab" == 'cab')
 assert("\099" == '\99')
 assert("\099\n" == 'c\10')
-assert('\0\0\0alo' == '\0' .. '\0\0' .. 'alo')
+assert('\0\0\0alo' == ('\0' .. '\0\0' .. 'alo'))
 
-assert(010 .. 020 .. -030 == "1020-30")
+assert((010 .. 020 .. -030) == "1020-30")
 
 -- hexadecimal escapes
 assert("\x00\x05\x10\x1f\x3C\xfF\xe8" == "\0\5\16\31\60\255\232")
@@ -261,13 +261,14 @@ end
 
 
 -- testing decimal point locale
+if not _KERNEL then
 if os.setlocale("pt_BR") or os.setlocale("ptb") then
   assert(not load("a = (3,4)"))
-  assert(tonumber("3,4") == 3.4 and tonumber"3.4" == nil)
-  assert(assert(load("return 3.4"))() == 3.4)
-  assert(assert(load("return .4,3"))() == .4)
-  assert(assert(load("return 4."))() == 4.)
-  assert(assert(load("return 4.+.5"))() == 4.5)
+  assert(tonumber("3,4") == tonumber('3.4') and tonumber"3.4" == nil)
+  assert(assert(load("return 3.4"))() == tonumber('3.4'))
+  assert(assert(load("return .4,3"))() == tonumber('.4'))
+  assert(assert(load("return 4."))() == tonumber('4.'))
+  assert(assert(load("return 4.+.5"))() == tonumber('4.5'))
   local a,b = load("return 4.5.")
   assert(string.find(b, "'4%.5%.'"))
   assert(os.setlocale("C"))
@@ -275,7 +276,7 @@ else
   (Message or print)(
    '\n >>> pt_BR locale not available: skipping decimal point tests <<<\n')
 end
-
+end
 
 -- testing %q x line ends
 local s = "a string with \r and \n and \r\n and \n\r"

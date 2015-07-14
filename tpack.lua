@@ -14,20 +14,27 @@ local sizeint = packsize("i")
 local sizelong = packsize("l")
 local sizesize_t = packsize("T")
 local sizeLI = packsize("j")
-local sizefloat = packsize("f")
-local sizedouble = packsize("d")
+local sizefloat, sizedouble
+if not _KERNEL then
+sizefloat = packsize("f")
+sizedouble = packsize("d")
+end
 local sizenumber = packsize("n")
 local little = (pack("i2", 1) == "\1\0")
 local align = packsize("!xXi16")
 
+if not _KERNEL then
 assert(1 <= sizeshort and sizeshort <= sizeint and sizeint <= sizelong and
        sizefloat <= sizedouble)
+else
+assert(1 <= sizeshort and sizeshort <= sizeint and sizeint <= sizelong)
+end
 
 print("platform:")
 print(string.format(
-  "\tshort %d, int %d, long %d, size_t %d, float %d, double %d,\n\z
+  "\tshort %d, int %d, long %d, size_t %d,\n\z
    \tlua Integer %d, lua Number %d",
-   sizeshort, sizeint, sizelong, sizesize_t, sizefloat, sizedouble,
+   sizeshort, sizeint, sizelong, sizesize_t, 
    sizeLI, sizenumber))
 print("\t" .. (little and "little" or "big") .. " endian")
 print("\talignment: " .. align)
@@ -136,10 +143,13 @@ checkerror("invalid format", packsize, "c1" .. string.rep("0", 40))
 
 if packsize("i") == 4 then
   -- result would be 2^31  (2^3 repetitions of 2^28 strings)
-  local s = string.rep("c268435456", 2^3)
+  --TODO int exp
+  --local s = string.rep("c268435456", 2^3)
+  local s = string.rep("c268435456", 8)
   checkerror("too large", packsize, s)
   -- one less is OK
-  s = string.rep("c268435456", 2^3 - 1) .. "c268435455"
+  --s = string.rep("c268435456", 2^3 - 1) .. "c268435455"
+  s = string.rep("c268435456", 8 - 1) .. "c268435455"
   assert(packsize(s) == 0x7fffffff)
 end
 
@@ -162,17 +172,21 @@ for i = 1, sizeLI - 1 do
 end
 
 -- Lua integer size
+if not _KERNEL then
 assert(unpack(">j", pack(">j", math.maxinteger)) == math.maxinteger)
 assert(unpack("<j", pack("<j", math.mininteger)) == math.mininteger)
+end
 assert(unpack("<J", pack("<j", -1)) == -1)   -- maximum unsigned integer
 
+if not _KERNEL then
 if little then
   assert(pack("f", 24) == pack("<f", 24))
 else
   assert(pack("f", 24) == pack(">f", 24))
 end
+end
 
-print "testing pack/unpack of floating-point numbers" 
+--[[print "testing pack/unpack of floating-point numbers" 
 
 for _, n in ipairs{0, -1.1, 1.9, 1/0, -1/0, 1e20, -1e20, 0.1, 2000.7} do
     assert(unpack("n", pack("n", n)) == n)
@@ -188,12 +202,12 @@ for _, n in ipairs{0, -1.5, 1/0, -1/0, 1e10, -1e9, 0.5, 2000.25} do
   assert(unpack(">f", pack(">f", n)) == n)
   assert(unpack("<d", pack("<d", n)) == n)
   assert(unpack(">d", pack(">d", n)) == n)
-end
+end]]
 
 print "testing pack/unpack of strings"
 do
   local s = string.rep("abc", 1000)
-  assert(pack("zB", s, 247) == s .. "\0\xF7")
+  assert(pack("zB", s, 247) == (s .. "\0\xF7"))
   local s1, b = unpack("zB", s .. "\0\xF9")
   assert(b == 249 and s1 == s)
   s1 = pack("s", s)
@@ -231,6 +245,7 @@ end
 
 
 -- testing multiple types and sequence
+if not _KERNEL then
 do
   local x = pack("<b h b f d f n i", 1, 2, 3, 4, 5, 6, 7, 8)
   assert(#x == packsize("<b h b f d f n i"))
@@ -238,16 +253,17 @@ do
   assert(a == 1 and b == 2 and c == 3 and d == 4 and e == 5 and f == 6 and
          g == 7 and h == 8) 
 end
+end
 
 print "testing alignment"
 do
   assert(pack(" < i1 i2 ", 2, 3) == "\2\3\0")   -- no alignment by default
   local x = pack(">!8 b Xh i4 i8 c1 Xi8", -12, 100, 200, "\xEC")
   assert(#x == packsize(">!8 b Xh i4 i8 c1 Xi8"))
-  assert(x == "\xf4" .. "\0\0\0" ..
+  assert(x == ("\xf4" .. "\0\0\0" ..
               "\0\0\0\100" ..
               "\0\0\0\0\0\0\0\xC8" .. 
-              "\xEC" .. "\0\0\0\0\0\0\0")
+              "\xEC" .. "\0\0\0\0\0\0\0"))
   local a, b, c, d, pos = unpack(">!8 c1 Xh i4 i8 b Xi8 XI XH", x)
   assert(a == "\xF4" and b == 100 and c == 200 and d == -20 and (pos - 1) == #x)
 
@@ -258,11 +274,13 @@ do
   assert(a == "abc" and b == "abcd" and c == "xz" and d == "hello" and
          e == 5 and f == "world" and g == "xy" and (pos - 1) % 4 == 0)
 
+  if not _KERNEL then
   x = pack(" b b Xd b Xb x", 1, 2, 3)
   assert(packsize(" b b Xd b Xb x") == 4)
   assert(x == "\1\2\3\0")
   a, b, c, pos = unpack("bbXdb", x)
   assert(a == 1 and b == 2 and c == 3 and pos == #x)
+  end
 
   -- only alignment
   assert(packsize("!8 xXi8") == 8)

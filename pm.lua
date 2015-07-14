@@ -148,7 +148,7 @@ assert(string.gsub('  alo alo  ', '^%s*(.-)%s*$', '%1') == 'alo alo')  -- double
 assert(string.gsub('alo  alo  \n 123\n ', '%s+', ' ') == 'alo alo 123 ')
 t = "abç d"
 a, b = string.gsub(t, '(.)', '%1@')
-assert('@'..a == string.gsub(t, '', '@') and b == 5)
+assert(('@'..a) == string.gsub(t, '', '@') and b == 5)
 a, b = string.gsub('abçd', '(.)', '%0@', 2)
 assert(a == 'a@b@çd' and b == 2)
 assert(string.gsub('alo alo', '()[al]', '%1') == '12o 56o')

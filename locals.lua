@@ -82,6 +82,7 @@ f()
 assert(c.a == 3)
 
 -- old test for limits for special instructions (now just a generic test)
+if not _KERNEL then
 do
   local i = 2
   local p = 4    -- p == 2^i
@@ -99,6 +100,7 @@ do
     end
     p = 2 * p;  i = i + 1
   until p <= 0
+end
 end
 
 print'+'
@@ -142,7 +144,7 @@ do local _ENV = mt
 end
 assert(getenv(foo) == mt)
 x = foo('hi'); assert(mt.A == 'hi' and A == 1000)
-assert(x('*') == mt.A .. '*')
+assert(x('*') == (mt.A .. '*'))
 
 do local _ENV = {assert=assert, A=10};
   do local _ENV = {assert=assert, A=20};

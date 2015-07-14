@@ -167,23 +167,31 @@ assert(a[2] == 14 and a[3] == "a31" and a[4] == nil and _G.a == "a31")
 
 
 -- testing arith
-assert(T.testC("pushnum 10; pushnum 20; arith /; return 1") == 0.5)
+if not _KERNEL then
+eval('assert(T.testC("pushnum 10; pushnum 20; arith /; return 1") == 0.5)')
+end
 assert(T.testC("pushnum 10; pushnum 20; arith -; return 1") == -10)
 assert(T.testC("pushnum 10; pushnum -20; arith *; return 1") == -200)
-assert(T.testC("pushnum 10; pushnum 3; arith ^; return 1") == 1000)
-assert(T.testC("pushnum 10; pushstring 20; arith /; return 1") == 0.5)
+if not _KERNEL then
+eval('assert(T.testC("pushnum 10; pushnum 3; arith ^; return 1") == 1000)')
+eval('assert(T.testC("pushnum 10; pushstring 20; arith /; return 1") == 0.5)')
+end
 assert(T.testC("pushstring 10; pushnum 20; arith -; return 1") == -10)
 assert(T.testC("pushstring 10; pushstring -20; arith *; return 1") == -200)
-assert(T.testC("pushstring 10; pushstring 3; arith ^; return 1") == 1000)
-assert(T.testC("arith /; return 1", 2, 0) == 10.0/0)
+if not _KERNEL then
+eval('assert(T.testC("pushstring 10; pushstring 3; arith ^; return 1") == 1000)')
+eval('assert(T.testC("arith /; return 1", 2, 0) == 10.0/0)')
 a = T.testC("pushnum 10; pushint 3; arith \\; return 1")
-assert(a == 3.0 and math.type(a) == "float")
+eval('assert(a == 3.0 and math.type(a) == "float")')
+end
 a = T.testC("pushint 10; pushint 3; arith \\; return 1")
 assert(a == 3 and math.type(a) == "integer")
 a = assert(T.testC("pushint 10; pushint 3; arith +; return 1"))
 assert(a == 13 and math.type(a) == "integer")
+if not _KERNEL then
 a = assert(T.testC("pushnum 10; pushint 3; arith +; return 1"))
-assert(a == 13 and math.type(a) == "float")
+eval('assert(a == 13 and math.type(a) == "float")')
+end
 a,b,c = T.testC([[pushnum 1;
                   pushstring 10; arith _;
                   pushstring 5; return 3]])
@@ -560,7 +568,9 @@ checkerr("got light userdata", debug.setuservalue, T.pushuserdata(1), {})
 
 local b = T.newuserdata(0)
 assert(debug.getuservalue(b) == nil)
-for _, v in pairs{true, false, 4.56, print, {}, b, "XYZ"} do
+local t = _KERNEL and {true, false, print, {}, b, "XYZ"} 
+                   or {true, false, tonumber('4.56'), print, {}, b, "XYZ"}
+for _, v in pairs(t) do
   assert(debug.setuservalue(b, v) == b)
   assert(debug.getuservalue(b) == v)
 end

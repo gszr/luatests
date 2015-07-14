@@ -49,7 +49,9 @@ assert(doit("error()") == nil)
 
 -- test common errors/errors that crashed in the past
 assert(doit("table.unpack({}, 1, n=2^30)"))
+if not _KERNEL then
 assert(doit("a=math.sin()"))
+end
 assert(not doit("tostring(1)") and doit("tostring()"))
 assert(doit"tonumber()")
 assert(doit"repeat until 1; a")
@@ -73,7 +75,9 @@ checkmessage("a = {} | 1", "bitwise operation")
 checkmessage("a = {} < 1", "attempt to compare")
 checkmessage("a = {} <= 1", "attempt to compare")
 
+if not _KERNEL then
 checkmessage("a=1; bbbb=2; a=math.sin(3)+bbbb(3)", "global 'bbbb'")
+end
 checkmessage("a={}; do local a=1 end a:bbbb(3)", "method 'bbbb'")
 checkmessage("local a={}; a.bbbb(3)", "field 'bbbb'")
 assert(not string.find(doit"a={13}; local bbbb=1; a[bbbb](3)", "'bbbb'"))
@@ -102,8 +106,10 @@ checkmessage("aaa='2'; b=nil;x=aaa*b", "global 'b'")
 checkmessage("aaa={}; x=-aaa", "global 'aaa'")
 
 -- short circuit
+if not _KERNEL then
 checkmessage("a=1; local a,bbbb=2,3; a = math.sin(1) and bbbb(3)",
        "local 'bbbb'")
+end
 checkmessage("a=1; local a,bbbb=2,3; a = bbbb(1) or a(3)", "local 'bbbb'")
 checkmessage("local a,b,c,f = 1,1,1; f((a and b) or c)", "local 'f'")
 checkmessage("local a,b,c = 1,1,1; ((a and b) or c)()", "call a number value")
@@ -116,6 +122,7 @@ checkmessage("print('10' < 10)", "string with number")
 checkmessage("print(10 < '23')", "number with string")
 
 -- float->integer conversions
+if not _KERNEL then
 checkmessage("local a = 2.0^100; x = a << 2", "local a")
 checkmessage("local a = 1 >> 2.0^100", "has no integer representation")
 checkmessage("local a = '10' << 2.0^100", "has no integer representation")
@@ -130,6 +137,7 @@ checkmessage("return 34 << 7e30", "has no integer representation")
 checkmessage("return ~-3e40", "has no integer representation")
 checkmessage("return ~-3.009", "has no integer representation")
 checkmessage("return 3.009 & 1", "has no integer representation")
+end
 checkmessage("return 34 >> {}", "table value")
 checkmessage("a = 24 // 0", "divide by zero")
 checkmessage("a = 1 % 0", "'n%0'")
@@ -145,7 +153,9 @@ checkmessage([[
 _G.D = nil
 
 do   -- named userdata
+  if not _KERNEL then
   checkmessage("math.sin(io.input())", "(number expected, got FILE*)")
+  end
   _ENV.XX = setmetatable({}, {__name = "My Type"})
   checkmessage("io.input(XX)", "(FILE* expected, got My Type)")
   _ENV.XX = nil
@@ -183,6 +193,7 @@ checkmessage("local _ENV=_ENV;"..s.."; a = bbb + 1", "global 'bbb'")
 checkmessage(s.."; local t = {}; a = t.bbb + 1", "field 'bbb'")
 checkmessage(s.."; local t = {}; t:bbb()", "method 'bbb'")
 
+if not _KERNEL then
 checkmessage([[aaa=9
 repeat until 3==3
 local x=math.sin(math.cos(3))
@@ -198,6 +209,7 @@ checkmessage([[
 local x,y = {},1
 if math.sin(1) == 0 then return 3 end    -- return
 x.a()]], "field 'a'")
+end
 
 checkmessage([[
 prefix = nil
@@ -208,9 +220,11 @@ while 1 do
   insert(prefix, a)
 end]], "global 'insert'")
 
+if not _KERNEL then
 checkmessage([[  -- tail call
   return math.sin("a")
 ]], "'sin'")
+end
 
 checkmessage([[collectgarbage("nooption")]], "invalid option")
 
@@ -385,7 +399,9 @@ if not _soft then
   local res, msg = xpcall(loop, function (m)
     assert(string.find(m, "stack overflow"))
     checkerr("error handling", loop)
+    if not _KERNEL then
     assert(math.sin(0) == 0)
+    end
     return 15
   end)
   assert(msg == 15)
@@ -441,7 +457,9 @@ assert(not a and type(b) == "table" and c == nil)
 
 print("testing tokens in error messages")
 checksyntax("syntax error", "", "error", 1)
+if not _KERNEL then
 checksyntax("1.000", "", "1.000", 1)
+end
 checksyntax("[[a]]", "", "[[a]]", 1)
 checksyntax("'aa'", "", "'aa'", 1)
 checksyntax("while << do end", "", "<<", 1)
@@ -485,8 +503,10 @@ testrep("", "do ", "", " end")
 testrep("", "while a do ", "", " end")
 testrep("", "if a then else ", "", " end")
 testrep("", "function foo () ", "", " end")
+if not _KERNEL then
 testrep("a=", "a..", "a", "")
 testrep("a=", "a^", "a", "")
+end
 
 checkmessage("a = f(x" .. string.rep(",x", 260) .. ")",
              "expression too complex")
