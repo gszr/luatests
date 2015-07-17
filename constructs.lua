@@ -2,7 +2,9 @@
 
 ;;print "testing syntax";;
 
+if not _KERNEL then
 local debug = require "debug"
+end
 
 -- testing semicollons
 do ;;; end
@@ -48,7 +50,7 @@ eval('assert(-3+4*5//2^3^2//9+4%10/3 == (-3)+(((4*5)//(2^(3^2)))//9)+((4%10)/3))
 end
 
 assert(not ((true or false) and nil))
-assert(      true or false  and nil)
+assert(      true or (false  and nil))
 
 -- old bug
 assert((((1 or false) and true) or false) == true)
@@ -110,7 +112,7 @@ a=nil
 while not a do
   a=0; for i=1,n do for i=i,1,-1 do a=a+1; t[i]=1; end; end;
 end
-assert(a == n*(n+1)/2 and i==3);
+assert(a == (n*(n+1))/2 and i==3);
 assert(t[1] and t[n] and not t[0] and not t[n+1])
 
 if not _KERNEL then
@@ -197,14 +199,14 @@ f,a = load(f)();
 assert(a.a == 1 and a.b)
 
 function g (a,b,c,d,e)
-  if not (a>=b or c or d and e or nil) then return 0; else return 1; end;
+  if not (a>=b or c or (d and e) or nil) then return 0; else return 1; end;
 end
 
 function h (a,b,c,d,e)
   while (a>=b or c or (d and e) or nil) do return 1; end;
   return 0;
 end;
-
+print(g(2,1))
 assert(f(2,1) == true and g(2,1) == 1 and h(2,1) == 1)
 assert(f(1,2,'a') == 'a' and g(1,2,'a') == 1 and h(1,2,'a') == 1)
 assert(f(1,2,'a')

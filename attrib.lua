@@ -1,5 +1,7 @@
 -- $Id: attrib.lua,v 1.61 2014/12/26 17:20:53 roberto Exp $
 
+if not _KERNEL then
+
 print "testing require"
 
 assert(require"string" == string)
@@ -303,6 +305,8 @@ end
 print('+')
 
 end  --]
+
+end
 
 print("testing assignments, logical operators, and constructors")
 

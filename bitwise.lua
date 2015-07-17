@@ -75,6 +75,10 @@ assert(not pcall(function () return "0xffffffffffffffff\0" | 0 end))
 
 print'+'
 
+if _KERNEL then
+	package = {}
+	package.preload = {}
+end
 
 package.preload.bit32 = function ()     --{
 
@@ -183,8 +187,13 @@ end  --}
 
 
 print("testing bitwise library")
+local bit32
 
-local bit32 = require'bit32'
+if not _KERNEL then
+	bit32 = require'bit32'
+else
+    bit32 = package.preload.bit32()
+end
 
 assert(bit32.band() == bit32.bnot(0))
 assert(bit32.btest() == true)

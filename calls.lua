@@ -2,7 +2,9 @@
 
 print("testing functions and calls")
 
+if not _KERNEL then
 local debug = require "debug"
+end
 
 -- get the opportunity to test 'type' too ;)
 

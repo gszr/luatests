@@ -206,7 +206,9 @@ t()
 
 
 -- test for debug manipulation of upvalues
+if not _KERNEL then
 local debug = require'debug'
+end
 
 do
   local a , b, c = 3, 5, 7
