@@ -22,10 +22,17 @@ os_time(lua_State *L)
 }
 
 static int
+os_clock(lua_State *L)
+{
+	return os_time(L);
+}
+
+static int
 luaopen_os(lua_State *L)
 {
 	const luaL_Reg os_lib[] = {
-		{ "time",  os_time},
+		{"time",  os_time},
+		{"clock", os_clock},
 		{NULL, NULL}
 	};
 
