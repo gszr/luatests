@@ -146,7 +146,9 @@ local dofile = function (n, strip)
   return f()
 end
 
+if not _KERNEL then
 dofile('main.lua')
+end
 
 do
   local next, setmetatable, stderr = next, setmetatable, io.stderr

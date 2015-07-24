@@ -2,7 +2,10 @@
 
 print('testing scanner')
 
-local debug = require "debug"
+local debug = debug
+if not _KERNEL then
+debug = require "debug"
+end
 
 
 local function dostring (x) return assert(load(x))() end
@@ -30,8 +33,14 @@ assert((010 .. 020 .. -030) == "1020-30")
 assert("\x00\x05\x10\x1f\x3C\xfF\xe8" == "\0\5\16\31\60\255\232")
 
 local function lexstring (x, y, n)
-  local f = assert(load('return ' .. x ..
+  local f
+  if not _KERNEL then
+  f = assert(load('return ' .. x ..
             ', require"debug".getinfo(1).currentline'))
+  else
+  f = assert(load('return ' .. x ..
+            ', debug.getinfo(1).currentline'))
+  end
   local s, l = f()
   assert(s == y and l == n)
 end
@@ -201,6 +210,7 @@ b = nil
 
 
 -- testing line ends
+if not _KERNEL then
 prog = [[
 a = 1        -- a comment
 b = 2
@@ -214,6 +224,21 @@ hello\r\n\
 "
 return require"debug".getinfo(1).currentline
 ]]
+else
+prog = [[
+a = 1        -- a comment
+b = 2
+
+
+x = [=[
+hi
+]=]
+y = "\
+hello\r\n\
+"
+return debug.getinfo(1).currentline
+]]
+end
 
 for _, n in pairs{"\n", "\r", "\n\r", "\r\n"} do
   local prog, nn = string.gsub(prog, "\n", n)

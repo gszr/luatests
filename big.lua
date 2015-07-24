@@ -6,7 +6,10 @@ end
 
 print "testing large tables"
 
-local debug = require"debug" 
+local debug = debug
+if not _KERNEL then
+debug = require"debug" 
+end
 
 -- TODO int exp
 --local lim = 2^18 + 1000

@@ -116,7 +116,10 @@ end
 --------------------------------------------------------------------------------
 -- testing closing of upvalues
 
-local debug = require 'debug'
+local debug = debug
+if not _KERNEL then
+debug = require 'debug'
+end
 
 local function foo ()
   local t = {}

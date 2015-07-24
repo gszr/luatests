@@ -2,7 +2,10 @@
 
 print("testing errors")
 
-local debug = require"debug"
+local debug = debug
+if not _KERNEL then
+debug = require"debug"
+end
 
 -- avoid problems with 'strict' module (which may generate other error messages)
 local mt = getmetatable(_G) or {}
@@ -157,12 +160,19 @@ do   -- named userdata
   checkmessage("math.sin(io.input())", "(number expected, got FILE*)")
   end
   _ENV.XX = setmetatable({}, {__name = "My Type"})
+
+  -- TODO: io lib
+  if not _KERNEL then
   checkmessage("io.input(XX)", "(FILE* expected, got My Type)")
+  end
   _ENV.XX = nil
 end
 
 -- global functions
+-- TODO: io lib
+if not _KERNEL then
 checkmessage("(io.write or print){}", "io.write")
+end
 checkmessage("(collectgarbage or print){}", "collectgarbage")
 
 -- errors in functions without debug info
@@ -232,7 +242,10 @@ checkmessage([[x = print .. "a"]], "concatenate")
 checkmessage([[x = "a" .. false]], "concatenate")
 checkmessage([[x = {} .. 2]], "concatenate")
 
+-- TODO: io lib
+if not _KERNEL then
 checkmessage("getmetatable(io.stdin).__gc()", "no value")
+end
 
 checkmessage([[
 local Var

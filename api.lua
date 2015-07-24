@@ -5,7 +5,10 @@ if T==nil then
   return
 end
 
-local debug = require "debug"
+local debug = debug
+if not _KERNEL then
+debug = require "debug"
+end
 
 local pack = table.pack
 

@@ -2,7 +2,10 @@
 
 print "testing coroutines"
 
-local debug = require'debug'
+local debug = debug
+if not _KERNEL then
+debug = require'debug'
+end
 
 local f
 
@@ -95,17 +98,14 @@ function gen (n)
   end)
 end
 
+local math = require'math'
 
 function filter (p, g)
   return coroutine.wrap(function ()
     while 1 do
       local n = g()
       if n == nil then return end
-      if not _KERNEL then
       if math.fmod(n, p) ~= 0 then coroutine.yield(n) end
-      else
-      if (n - (n//p) * p) ~= 0 then coroutine.yield(n) end
-      end
     end
   end)
 end
@@ -425,7 +425,9 @@ else
   T.loadlib(state)
 
   assert(T.doremote(state, [[
+    if not _KERNEL then
     coroutine = require'coroutine';
+	end
     X = function (x) coroutine.yield(x, 'BB'); return 'CC' end;
     return 'ok']]))
 

@@ -2,7 +2,10 @@
 
 print('testing garbage collection')
 
-local debug = require"debug"
+local debug = debug
+if not _KERNEL then
+debug = require"debug"
+end
 
 collectgarbage()
 
