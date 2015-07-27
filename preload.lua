@@ -2,6 +2,13 @@
 
 _KERNEL	= true
 
+os   = require'os'
+math = require'math'
+
+function require (module)
+	return _G[module]
+end
+
 function eval (chunk) 
 	return load(chunk)() 
 end
