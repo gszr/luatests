@@ -225,10 +225,13 @@ assert(string.find(select(2, pcall(ipairs)), "bad argument"))
 
 print('+')
 
+if _KERNEL then
+local math = require'math'
+end
+
 a = {}
 for i=0,10000 do
-  -- math.fmod(a, b) is equivalent to (a - (a//b) * b)
-  if i - (i//10) * 10 ~= 0 then
+  if math.fmod(i, 10) ~= 0 then
     a['x'..i] = i
   end
 end
