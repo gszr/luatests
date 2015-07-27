@@ -197,10 +197,8 @@ limit = 30000
 if _soft then limit = 5000 end
 
 a = {}
-if not _KERNEL then
 for i=1,limit do
   a[i] = math.random()
-end
 end
 
 local x = os.clock()
@@ -208,7 +206,7 @@ table.sort(a)
 if not _KERNEL then
 print(string.format("Sorting %d elements in %.2f sec.", limit, os.clock()-x))
 else
-print(string.format("Sorting %d elements in %d sec.", limit, os.clock()-x))
+print(string.format("Sorting %d elements in %d msec.", limit, (os.clock()-x)/1000))
 end
 check(a)
 
@@ -217,15 +215,13 @@ table.sort(a)
 if not _KERNEL then
 print(string.format("Re-sorting %d elements in %.2f sec.", limit, os.clock()-x))
 else
-print(string.format("Re-sorting %d elements in %d sec.", limit, os.clock()-x))
+print(string.format("Re-sorting %d elements in %d msec.", limit, (os.clock()-x)/1000))
 end
 check(a)
 
 a = {}
-if not _KERNEL then
 for i=1,limit do
   a[i] = math.random()
-end
 end
 
 x = os.clock(); i=0
@@ -234,8 +230,8 @@ if not _KERNEL then
 print(string.format("Invert-sorting other %d elements in %.2f sec., with %i comparisons",
       limit, os.clock()-x, i))
 else
-print(string.format("Invert-sorting other %d elements in %d sec., with %i comparisons",
-      limit, os.clock()-x, i))
+print(string.format("Invert-sorting other %d elements in %d msec., with %i comparisons",
+      limit, (os.clock()-x)/1000, i))
 end
 check(a, function(x,y) return y<x end)
 
@@ -248,7 +244,7 @@ table.sort(a, function(x,y) return nil end)
 if not _KERNEL then
 print(string.format("Sorting %d equal elements in %.2f sec.", limit, os.clock()-x))
 else
-print(string.format("Sorting %d equal elements in %d sec.", limit, os.clock()-x))
+print(string.format("Sorting %d equal elements in %d msec.", limit, (os.clock()-x)/1000))
 end
 check(a, function(x,y) return nil end)
 -- XXX: bug da precedencia
@@ -267,9 +263,7 @@ table.sort(A, function (x, y)
 
 tt = {__lt = function (a,b) return a.val < b.val end}
 a = {}
-if not _KERNEL then
 for i=1,10 do  a[i] = {val=math.random(100)}; setmetatable(a[i], tt); end
-end
 table.sort(a)
 check(a, tt.__lt)
 check(a)

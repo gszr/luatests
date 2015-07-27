@@ -22,9 +22,18 @@ os_time(lua_State *L)
 }
 
 static int
+os_utime(lua_State *L)
+{
+	struct timeval tv;
+	microtime(&tv);
+	lua_pushinteger(L, tv.tv_usec);
+	return 1;
+}
+
+static int
 os_clock(lua_State *L)
 {
-	return os_time(L);
+	return os_utime(L);
 }
 
 static int
