@@ -2,10 +2,7 @@
 
 print('testing local variables and environments')
 
-local debug = debug
-if not _KERNEL then
-debug = require"debug"
-end
+local debug = require"debug"
 
 -- bug in 5.1:
 

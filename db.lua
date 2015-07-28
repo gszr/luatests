@@ -2,10 +2,7 @@
 
 -- testing debug library
 
-local debug = debug
-if not _KERNEL then
-debug = require "debug"
-end
+local debug = require "debug"
 
 local function dostring(s) return assert(load(s))() end
 

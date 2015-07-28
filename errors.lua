@@ -2,10 +2,7 @@
 
 print("testing errors")
 
-local debug = debug
-if not _KERNEL then
-debug = require"debug"
-end
+local debug = require"debug"
 
 -- avoid problems with 'strict' module (which may generate other error messages)
 local mt = getmetatable(_G) or {}

@@ -2,11 +2,7 @@
 
 print('testing scanner')
 
-local debug = debug
-if not _KERNEL then
-debug = require "debug"
-end
-
+local debug = require "debug"
 
 local function dostring (x) return assert(load(x))() end
 

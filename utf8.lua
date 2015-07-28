@@ -2,10 +2,7 @@
 
 print "testing UTF-8 library"
 
-local utf8 = utf8
-if not _KERNEL then
-utf8 = require'utf8'
-end
+local utf8 = require'utf8'
 
 
 local function checkerror (msg, f, ...)

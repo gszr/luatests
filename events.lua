@@ -2,10 +2,7 @@
 
 print('testing metatables')
 
-local debug = debug
-if not _KERNEL then
-debug = require'debug'
-end
+local debug = require'debug'
 
 X = 20; B = 30
 
