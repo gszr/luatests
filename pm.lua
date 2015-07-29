@@ -222,6 +222,7 @@ checkerror("invalid capture index %%1", string.gsub, "alo", "(%1)", "a")
 checkerror("invalid use of '%%'", string.gsub, "alo", ".", "%x")
 
 -- bug since 2.5 (C-stack overflow)
+if not _KERNEL then
 do
   local function f (size)
     local s = string.rep("a", size)
@@ -232,6 +233,7 @@ do
   assert(r and #m == 80)
   r, m = f(200000)
   assert(not r and string.find(m, "too complex"))
+end
 end
 
 if not _soft then
