@@ -2,6 +2,8 @@
 
 print "testing RK"
 
+if not _KERNEL then
+
 -- testing opcodes with RK arguments larger than K limit
 local function foo ()
   local dummy = {
@@ -207,3 +209,9 @@ assert(os.remove(file))
 print'OK'
 return result
 
+else
+
+print'skipping verybig.lua'
+return 10
+
+end
