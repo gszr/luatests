@@ -278,8 +278,11 @@ assert(a and b == 3)
 assert(coroutine.status(co1) == 'dead')
 
 -- infinite recursion of coroutines
+-- XXX Kernel Lua: kernel panic, overflow
+if not _KERNEL then
 a = function(a) coroutine.wrap(a)(a) end
 assert(not pcall(a, a))
+end
 a = nil
 
 
