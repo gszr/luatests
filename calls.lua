@@ -2,10 +2,7 @@
 
 print("testing functions and calls")
 
-local debug = debug
-if not _KERNEL then
-debug = require "debug"
-end
+local debug = require "debug"
 
 -- get the opportunity to test 'type' too ;)
 
@@ -215,8 +212,9 @@ assert(a[1] == 1 and a[2] == 3 and a[3] == "a" and a[4] == "b")
 -- testing calls with 'incorrect' arguments
 rawget({}, "x", 1)
 rawset({}, "x", 1, 2)
+-- XXX Kernel Lua: no math std lib
 if not _KERNEL then
-eval('assert(math.sin(1,2) == math.sin(1))')
+eval'assert(math.sin(1,2) == math.sin(1))'
 end
 table.sort({10,9,8,4,19,23,0,0}, function (a,b) return a<b end, "extra arg")
 

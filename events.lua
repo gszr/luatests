@@ -19,7 +19,8 @@ assert(B == 30)
 
 assert(getmetatable{} == nil)
 assert(getmetatable(4) == nil)
--- XXX bug: assert passa na primeira execucao e falha nas seguintes
+-- XXX Kernel Lua: assert passa na primeira execucao e falha nas seguintes
+-- Nao eh bug; setmetatable(nil) eh executado nos testes
 if not _KERNEL then
 assert(getmetatable(nil) == nil)
 end
@@ -143,27 +144,44 @@ assert('5'-a == '5')
 assert(cap[0] == "sub" and cap[1] == '5' and cap[2] == a and cap[3]==nil)
 assert(a*a == a)
 assert(cap[0] == "mul" and cap[1] == a and cap[2] == a and cap[3]==nil)
+-- XXX Kernel Lua: no div operator
 if not _KERNEL then
 assert(a/0 == a)
 assert(cap[0] == "div" and cap[1] == a and cap[2] == 0 and cap[3]==nil)
 end
 assert(a%2 == a)
 assert(cap[0] == "mod" and cap[1] == a and cap[2] == 2 and cap[3]==nil)
---XXX
+-- XXX Kernel Lua: teste abaixo nao passa
 if not _KERNEL then
 assert(a // (1/0) == a)
 assert(cap[0] == "idiv" and cap[1] == a and cap[2] == 1/0 and cap[3]==nil)
 end
+-- XXX Kernel Lua: precedence bug
+if not _KERNEL then
+assert(a & "hi" == a)
+else
 assert((a & "hi") == a)
+end
 assert(cap[0] == "band" and cap[1] == a and cap[2] == "hi" and cap[3]==nil)
+-- XXX Kernel Lua: precedence bug
+if not _KERNEL then
+assert(a | "hi" == a)
+else
 assert((a | "hi") == a)
+end
 assert(cap[0] == "bor" and cap[1] == a and cap[2] == "hi" and cap[3]==nil)
+-- XXX Kernel Lua: precedence bug
+if not _KERNEL then
+assert("hi" ~ a == "hi")
+else
 assert(("hi" ~ a) == "hi")
+end
 assert(cap[0] == "bxor" and cap[1] == "hi" and cap[2] == a and cap[3]==nil)
 assert(-a == a)
 assert(cap[0] == "unm" and cap[1] == a)
---TODO pensar melhor nisso
---[[assert(a^4 == a)
+-- XXX Kernel Lua: no expo operator
+if not _KERNEL then
+eval[[assert(a^4 == a)
 assert(cap[0] == "pow" and cap[1] == a and cap[2] == 4 and cap[3]==nil)
 assert(a^'4' == a)
 assert(cap[0] == "pow" and cap[1] == a and cap[2] == '4' and cap[3]==nil)
@@ -171,21 +189,30 @@ assert(4^a == 4)
 assert(cap[0] == "pow" and cap[1] == 4 and cap[2] == a and cap[3]==nil)
 assert('4'^a == '4')
 assert(cap[0] == "pow" and cap[1] == '4' and cap[2] == a and cap[3]==nil)]]
+end
 assert(#a == a)
 assert(cap[0] == "len" and cap[1] == a)
 assert(~a == a)
 assert(cap[0] == "bnot" and cap[1] == a)
+-- XXX Kernel Lua: precedence bug
+if not _KERNEL then
+assert(a << 3 == a)
+else
 assert((a << 3) == a)
+end
 assert(cap[0] == "shl" and cap[1] == a and cap[2] == 3)
---[[assert(1.5 >> a == 1.5)
+-- XXX Kernel Lua: no floating point tests
+if not _KERNEL then
+eval[[assert(1.5 >> a == 1.5)
 assert(cap[0] == "shr" and cap[1] == 1.5 and cap[2] == a)]]
+end
 
 
 -- test for rawlen
 t = setmetatable({1,2,3}, {__len = function () return 10 end})
 assert(#t == 10 and rawlen(t) == 3)
 assert(rawlen"abc" == 3)
--- TODO io lib
+-- XXX Kernel Lua TODO io lib
 if not _KERNEL then
 assert(not pcall(rawlen, io.stdin))
 end
@@ -327,8 +354,14 @@ c = {val="c"}; setmetatable(c, t)
 d = {val="d"}; setmetatable(d, t)
 
 A = true
+-- XXX Kernel Lua: precedence bug
+if not _KERNEL then
+assert(c..d == 'cd')
+assert(0 .."a".."b"..c..d.."e".."f"..(5+3).."g" == "0abcdef8g")
+else
 assert((c..d) == 'cd')
 assert((0 .."a".."b"..c..d.."e".."f"..(5+3).."g") == "0abcdef8g")
+end
 
 A = false
 assert((c..d..c..d).val == 'cdcd')
@@ -342,15 +375,20 @@ assert(x.val == "0abcdefg")
 c = {}
 local x
 setmetatable(c, {__concat = function (a,b)
-  -- XXX: bug: type(b) retorna 'table'
+  -- XXX Kernel Lua: bug? type(b) retorna 'table'
   if not _KERNEL then
-  assert((type(a) == "number") and (b == c) or (type(b) == "number") and a == c)
+  assert(type(a) == "number" and b == c or type(b) == "number" and a == c)
   end
   return c
 end})
---TODO precedence broken
+-- XXX Kernel Lua: precedence bug
+if not _KERNEL then
+assert(c..5 == c and 5 .. c == c)
+assert(4 .. c .. 5 == c and 4 .. 5 .. 6 .. 7 .. c == c)
+else
 assert((c..5) == c and (5 .. c) == c)
 assert((4 .. c .. 5) == c and (4 .. (5 .. (6 .. (7 .. c)))) == c)
+end
 
 -- test comparison compatibilities
 local t1, t2, c, d
@@ -409,7 +447,10 @@ debug.setmetatable(10, mt)
 assert(getmetatable(-2) == mt)
 assert((10)[3] == 13)
 assert((10)["3"] == 13)
---assert(#3.45 == 3)
+-- XXX Kernel Lua: no floating-point
+if not _KERNEL then
+eval'assert(#3.45 == 3)'
+end
 debug.setmetatable(23, nil)
 assert(getmetatable(-2) == nil)
 

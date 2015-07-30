@@ -35,7 +35,7 @@ local function checksyntax (prog, extra, token, line)
   token = string.gsub(token, "(%p)", "%%%1")
   local pt = string.format([[^%%[string ".*"%%]:%d: .- near %s$]],
                            line, token)
-  --XXX bug no pcall
+  --XXX Kernel Lua: pcall retorna msg entre colchetes
   if not _KERNEL then
   assert(string.find(msg, pt))
   end
@@ -52,6 +52,7 @@ assert(doit("error()") == nil)
 
 -- test common errors/errors that crashed in the past
 assert(doit("table.unpack({}, 1, n=2^30)"))
+-- XXX Kernel Lua: no std math lib
 if not _KERNEL then
 assert(doit("a=math.sin()"))
 end
@@ -78,6 +79,7 @@ checkmessage("a = {} | 1", "bitwise operation")
 checkmessage("a = {} < 1", "attempt to compare")
 checkmessage("a = {} <= 1", "attempt to compare")
 
+-- XXX Kernel Lua: no std math lib
 if not _KERNEL then
 checkmessage("a=1; bbbb=2; a=math.sin(3)+bbbb(3)", "global 'bbbb'")
 end
@@ -109,6 +111,7 @@ checkmessage("aaa='2'; b=nil;x=aaa*b", "global 'b'")
 checkmessage("aaa={}; x=-aaa", "global 'aaa'")
 
 -- short circuit
+-- XXX Kernel Lua: no std math lib
 if not _KERNEL then
 checkmessage("a=1; local a,bbbb=2,3; a = math.sin(1) and bbbb(3)",
        "local 'bbbb'")
@@ -125,6 +128,7 @@ checkmessage("print('10' < 10)", "string with number")
 checkmessage("print(10 < '23')", "number with string")
 
 -- float->integer conversions
+-- XXX Kernel Lua: no floating-point tests
 if not _KERNEL then
 checkmessage("local a = 2.0^100; x = a << 2", "local a")
 checkmessage("local a = 1 >> 2.0^100", "has no integer representation")
@@ -155,17 +159,16 @@ checkmessage([[
 ]], "light userdata")
 _G.D = nil
 
+-- XXX Kernel Lua TODO math.sin, io.input
+if not _KERNEL then
 do   -- named userdata
-  if not _KERNEL then
   checkmessage("math.sin(io.input())", "(number expected, got FILE*)")
-  end
   _ENV.XX = setmetatable({}, {__name = "My Type"})
 
   -- TODO: io lib
-  if not _KERNEL then
   checkmessage("io.input(XX)", "(FILE* expected, got My Type)")
-  end
   _ENV.XX = nil
+end
 end
 
 -- global functions
@@ -203,6 +206,7 @@ checkmessage("local _ENV=_ENV;"..s.."; a = bbb + 1", "global 'bbb'")
 checkmessage(s.."; local t = {}; a = t.bbb + 1", "field 'bbb'")
 checkmessage(s.."; local t = {}; t:bbb()", "method 'bbb'")
 
+-- XXX Kernel Lua: TODO math lib
 if not _KERNEL then
 checkmessage([[aaa=9
 repeat until 3==3
@@ -230,6 +234,7 @@ while 1 do
   insert(prefix, a)
 end]], "global 'insert'")
 
+-- XXX Kernel Lua: TODO math lib
 if not _KERNEL then
 checkmessage([[  -- tail call
   return math.sin("a")
@@ -242,7 +247,7 @@ checkmessage([[x = print .. "a"]], "concatenate")
 checkmessage([[x = "a" .. false]], "concatenate")
 checkmessage([[x = {} .. 2]], "concatenate")
 
--- TODO: io lib
+-- XXX Kernel Lua: TODO io lib
 if not _KERNEL then
 checkmessage("getmetatable(io.stdin).__gc()", "no value")
 end
@@ -265,7 +270,7 @@ checkmessage("table.sort({1,2,3}, table.sort)", "'table.sort'")
 checkmessage("string.gsub('s', 's', setmetatable)", "'setmetatable'")
 
 -- tests for errors in coroutines
--- XXX bug overflow
+-- XXX Kernel Lua: overflow bug (kernel panic)
 if not _KERNEL then
 local function f (n)
   local c = coroutine.create(f)
@@ -352,7 +357,7 @@ X=0;lineerror((p), nil)
 X=1;lineerror((p), 2)
 X=2;lineerror((p), 1)
 
---XXX bug overflow
+--XXX Kernel Lua: overflow bug
 if not _KERNEL then
 if not _soft then
   -- several tests that exaust the Lua stack
@@ -447,7 +452,7 @@ do
   assert(not res and msg == "X")
  
   -- 'assert' with no message
-  -- XXX bug no pcall? retorna msg entre colchetes
+  -- XXX Kernel Lua: bug pcall? retorna msg entre colchetes
   if not _KERNEL then
   res, msg = pcall(function () assert(false) end)
   local line = string.match(msg, "%w+%.lua:(%d+): assertion failed!$")
@@ -475,6 +480,7 @@ assert(not a and type(b) == "table" and c == nil)
 
 print("testing tokens in error messages")
 checksyntax("syntax error", "", "error", 1)
+-- XXX Kernel Lua: no floating-point tests
 if not _KERNEL then
 checksyntax("1.000", "", "1.000", 1)
 end
@@ -502,7 +508,7 @@ end
 
 
 -- testing syntax limits
---XXX bug overflow
+--XXX Kernel Lua: bug overflow
 if not _KERNEL then
 
 local maxClevel = 200    -- LUAI_MAXCCALLS (in llimits.h)
@@ -523,8 +529,9 @@ testrep("", "do ", "", " end")
 testrep("", "while a do ", "", " end")
 testrep("", "if a then else ", "", " end")
 testrep("", "function foo () ", "", " end")
-if not _KERNEL then
 testrep("a=", "a..", "a", "")
+-- XXX Kernel Lua: no expo operator
+if not _KERNEL then
 testrep("a=", "a^", "a", "")
 end
 

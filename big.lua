@@ -8,9 +8,13 @@ print "testing large tables"
 
 local debug = require"debug" 
 
--- TODO int exp
---local lim = 2^18 + 1000
-local lim = 262144 + 1000
+-- XXX Kernel Lua: no expo operator
+local lim
+if not _KERNEL then
+eval'lim = 2^18 + 1000'
+else
+lim = 262144 + 1000
+end
 local prog = { "local y = {0" }
 for i = 1, lim do prog[#prog + 1] = i  end
 prog[#prog + 1] = "}\n"
@@ -56,15 +60,16 @@ f, X = nil
 
 coroutine.yield'b'
 
+-- XXX Kernel Lua: no expo operator
 if not _KERNEL then
-if eval('return 2^32 == 0') then   -- (small integers) {   
+eval[[if ^32 == 0 then   -- (small integers) {   
 
 print "testing string length overflow"
 
 local repstrings = 192          -- number of strings to be concatenated
-local ssize = math.ceil(eval('return 2.0^32') / repstrings) + 1   -- size of each string
+local ssize = math.ceil(2.0^32 / repstrings) + 1   -- size of each string
 
-assert(repstrings * ssize > eval('return 2.0^32'))  -- it should be larger than maximum size
+assert(repstrings * ssize > 2.0^32)  -- it should be larger than maximum size
 
 local longs = string.rep("\0", ssize)   -- create one long string
 
@@ -77,7 +82,7 @@ local a, b = pcall(rep, longs)   -- call that function
 -- it should fail without creating string (result would be too large)
 assert(not a and string.find(b, "overflow"))
 
-end   -- }
+end   -- }]]
 end
 
 print'OK'

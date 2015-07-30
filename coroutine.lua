@@ -2,10 +2,7 @@
 
 print "testing coroutines"
 
-local debug = debug
-if not _KERNEL then
-debug = require'debug'
-end
+local debug = require'debug'
 
 local f
 
@@ -97,8 +94,6 @@ function gen (n)
     for i=2,n do coroutine.yield(i) end
   end)
 end
-
-local math = require'math'
 
 function filter (p, g)
   return coroutine.wrap(function ()
@@ -218,9 +213,12 @@ local a = 0
 for t in coroutine.wrap(function () all({}, 5, 4) end) do
   a = a+1
 end
---TODO int exp
---assert(a == 5^4)
+--XXX Kernel Lua: no expo operator
+if not _KERNEL then
+eval'assert(a == 5^4)'
+else
 assert(a == 625)
+end
 
 
 -- access to locals of collected corroutines
@@ -425,9 +423,7 @@ else
   T.loadlib(state)
 
   assert(T.doremote(state, [[
-    if not _KERNEL then
     coroutine = require'coroutine';
-	end
     X = function (x) coroutine.yield(x, 'BB'); return 'CC' end;
     return 'ok']]))
 
@@ -469,12 +465,16 @@ _X = coroutine.wrap(function ()
 
 _X()
 
-
+if not _KERNEL then
 if not _soft then
   -- bug (stack overflow)
-  -- TODO: int exp
-  --local j = 2^9
-  local j = 512
+  local j
+  -- XXX Kernel Lua: no expo operator
+  if not _KERNEL then
+  eval'j = 2^9'
+  else
+  j = 512
+  end
   local lim = 1000000    -- (C stack limit; assume 32-bit machine)
   local t = {lim - 10, lim - 5, lim - 1, lim, lim + 1}
   for i = 1, #t do
@@ -488,6 +488,7 @@ if not _soft then
     assert(not r)
   end
   co = nil
+end
 end
 
 
@@ -559,15 +560,29 @@ assert(run(function () if (a<=b) then return '<=' else return '>' end end,
 assert(run(function () if (a==b) then return '==' else return '~=' end end,
        {"eq"}) == "~=")
 
+-- XXX Kernel Lua: precedence bug
+if not _KERNEL then
+assert(run(function () return a & b + a end, {"add", "band"}) == 2)
+else
 assert(run(function () return a & (b + a) end, {"add", "band"}) == 2)
+end
 
 assert(run(function () return a % b end, {"mod"}) == 10)
 
+-- XXX Kernel Lua: precedence bug
+if not _KERNEL then
+assert(run(function () return ~a & b end, {"bnot", "band"}) == ~10 & 12)
+assert(run(function () return a | b end, {"bor"}) == 10 | 12)
+assert(run(function () return a ~ b end, {"bxor"}) == 10 ~ 12)
+assert(run(function () return a << b end, {"shl"}) == 10 << 12)
+assert(run(function () return a >> b end, {"shr"}) == 10 >> 12)
+else
 assert(run(function () return ~a & b end, {"bnot", "band"}) == (~10 & 12))
 assert(run(function () return a | b end, {"bor"}) == (10 | 12))
 assert(run(function () return a ~ b end, {"bxor"}) == (10 ~ 12))
 assert(run(function () return a << b end, {"shl"}) == (10 << 12))
 assert(run(function () return a >> b end, {"shr"}) == (10 >> 12))
+end
 
 assert(run(function () return a..b end, {"concat"}) == "1012")
 

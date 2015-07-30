@@ -4,6 +4,7 @@ print('testing local variables and environments')
 
 local debug = require"debug"
 
+
 -- bug in 5.1:
 
 local function f(x) x = nil; return x end
@@ -81,6 +82,7 @@ f()
 assert(c.a == 3)
 
 -- old test for limits for special instructions (now just a generic test)
+-- XXX Kernel Lua: no expo operator
 if not _KERNEL then
 do
   local i = 2
@@ -143,7 +145,12 @@ do local _ENV = mt
 end
 assert(getenv(foo) == mt)
 x = foo('hi'); assert(mt.A == 'hi' and A == 1000)
+-- XXX Kernel Lua: precedence bug
+if not _KERNEL then
+assert(x('*') == mt.A .. '*')
+else
 assert(x('*') == (mt.A .. '*'))
+end
 
 do local _ENV = {assert=assert, A=10};
   do local _ENV = {assert=assert, A=20};

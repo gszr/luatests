@@ -13,7 +13,7 @@ function eval (chunk)
 	return load(chunk)() 
 end
 
--- thanks to roberto ierusalimschy - http://www.lua.org/pil/14.1.html
+-- taken from http://www.lua.org/pil/14.1.html
 function setfield (f, v)
 	local t = _G    -- start with the table of globals
 	for w, d in string.gmatch(f, "([%w_]+)(.?)") do

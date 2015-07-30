@@ -4,6 +4,7 @@ print('testing scanner')
 
 local debug = require "debug"
 
+
 local function dostring (x) return assert(load(x))() end
 
 dostring("x \v\f = \t\r 'a\0a' \v\f\f")
@@ -21,22 +22,22 @@ assert("\09912" == 'c12')
 assert("\99ab" == 'cab')
 assert("\099" == '\99')
 assert("\099\n" == 'c\10')
+-- XXX Kernel Lua: precedence bug
+if not _KERNEL then
+assert('\0\0\0alo' == '\0' .. '\0\0' .. 'alo')
+assert(010 .. 020 .. -030 == "1020-30")
+else
 assert('\0\0\0alo' == ('\0' .. '\0\0' .. 'alo'))
-
 assert((010 .. 020 .. -030) == "1020-30")
+end
+
 
 -- hexadecimal escapes
 assert("\x00\x05\x10\x1f\x3C\xfF\xe8" == "\0\5\16\31\60\255\232")
 
 local function lexstring (x, y, n)
-  local f
-  if not _KERNEL then
-  f = assert(load('return ' .. x ..
+  local f = assert(load('return ' .. x ..
             ', require"debug".getinfo(1).currentline'))
-  else
-  f = assert(load('return ' .. x ..
-            ', debug.getinfo(1).currentline'))
-  end
   local s, l = f()
   assert(s == y and l == n)
 end
@@ -206,7 +207,6 @@ b = nil
 
 
 -- testing line ends
-if not _KERNEL then
 prog = [[
 a = 1        -- a comment
 b = 2
@@ -220,21 +220,6 @@ hello\r\n\
 "
 return require"debug".getinfo(1).currentline
 ]]
-else
-prog = [[
-a = 1        -- a comment
-b = 2
-
-
-x = [=[
-hi
-]=]
-y = "\
-hello\r\n\
-"
-return debug.getinfo(1).currentline
-]]
-end
 
 for _, n in pairs{"\n", "\r", "\n\r", "\r\n"} do
   local prog, nn = string.gsub(prog, "\n", n)
@@ -282,21 +267,22 @@ end
 
 
 -- testing decimal point locale
+-- XXX Kernel Lua: no floating-point tests
 if not _KERNEL then
-if os.setlocale("pt_BR") or os.setlocale("ptb") then
+eval[[if os.setlocale("pt_BR") or os.setlocale("ptb") then
   assert(not load("a = (3,4)"))
-  assert(tonumber("3,4") == tonumber('3.4') and tonumber"3.4" == nil)
-  assert(assert(load("return 3.4"))() == tonumber('3.4'))
-  assert(assert(load("return .4,3"))() == tonumber('.4'))
-  assert(assert(load("return 4."))() == tonumber('4.'))
-  assert(assert(load("return 4.+.5"))() == tonumber('4.5'))
+  assert(tonumber("3,4") == 3.4 and tonumber"3.4" == nil)
+  assert(assert(load("return 3.4"))() == 3.4)
+  assert(assert(load("return .4,3"))() == .4)
+  assert(assert(load("return 4."))() == 4.)
+  assert(assert(load("return 4.+.5"))() == 4.5)
   local a,b = load("return 4.5.")
   assert(string.find(b, "'4%.5%.'"))
   assert(os.setlocale("C"))
 else
   (Message or print)(
    '\n >>> pt_BR locale not available: skipping decimal point tests <<<\n')
-end
+end]]
 end
 
 -- testing %q x line ends

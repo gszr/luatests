@@ -24,19 +24,19 @@ local function checkKlist (func, list)
   end
 end
 
+-- XXX Kernel Lua: no floating-point tests
 if not _KERNEL then
-local function foo ()
+eval[[local function foo ()
   local a
   a = 3;
-  a = 0; a = tonumber('0.0'); a = -7 + 7
-  a = tonumber('3.78')/4; a = tonumber('3.78')/4
-  a = tonumber('-3.78')/4; a = tonumber('3.78')/4; a = tonumber('-3.78')/4
-  a = tonumber('-3.79')/4; a = tonumber('0.0'); a = -0;
-  a = 3; a = tonumber('3.0'); a = 3; a = tonumber('3.0')
+  a = 0; a = 0.0; a = -7 + 7
+  a = 3.78/4; a = 3.78/4
+  a = -3.78/4; a = 3.78/4; a = -3.78/4
+  a = -3.79/4; a = 0.0; a = -0;
+  a = 3; a = 3.0; a = 3; a = 3.0
 end
 
-checkKlist(foo, {3, 0, tonumber('0.0'), tonumber('3.78')/4, 
-		tonumber('-3.78')/4, tonumber('-3.79')/4, tonumber('3.0')})
+checkKlist(foo, {3, 0, 0.0, 3.78/4, -3.78/4, -3.79/4, 3.0})]]
 end
 
 -- testing opcodes
@@ -115,17 +115,17 @@ check(function () return not not true end, 'LOADBOOL', 'RETURN')
 check(function () return not not 1 end, 'LOADBOOL', 'RETURN')
 
 -- direct access to locals
+-- XXX Kernel Lua: no floating-point tests
 if not _KERNEL then
-check(function ()
+eval[[check(function ()
   local a,b,c,d
   a = b*2
-  -- TODO eval is probably not going to work here
-  c[4], a[b] = eval("return -((a + d/tonumber('-20.5') - a[b]) ^ a.x)"), b
+  c[4], a[b] = -((a + d/-20.5 - a[b]) ^ a.x), b
 end,
   'LOADNIL',
   'MUL',
   'DIV', 'ADD', 'GETTABLE', 'SUB', 'GETTABLE', 'POW',
-    'UNM', 'SETTABLE', 'SETTABLE', 'RETURN')
+    'UNM', 'SETTABLE', 'SETTABLE', 'RETURN')]]
 end
 
 -- direct access to constants
@@ -151,34 +151,39 @@ local function checkK (func, val)
   assert(#k == 1 and k[1] == val and math.type(k[1]) == math.type(val))
   assert(func() == val)
 end
+-- XXX Kernel Lua: no floating-point tests
 if not _KERNEL then
-checkK(function () return tonumber('0.0') end, tonumber('0.0'))
+eval'checkK(function () return 0.0 end, 0.0)'
 end
 checkK(function () return 0 end, 0)
 checkK(function () return -0//1 end, 0)
+-- XXX Kernel Lua: no floating-point tests
 if not _KERNEL then
-checkK(function () return eval('return 3^-1') end, 1/3)
-checkK(function () return eval('return (1 + 1)^(50 + 50)') end, eval('2^100'))
-checkK(function () return eval('return (-2)^(31 - 2)') end, -0x20000000 + tonumber('0.0'))
-checkK(function () return eval('return (-3^0 + 5) // 3.0') end, tonumber('1.0'))
+eval[[checkK(function () return 3^-1 end, 1/3)
+checkK(function () return (1 + 1)^(50 + 50) end, 2^100)
+checkK(function () return (-2)^(31 - 2) end, -0x20000000 + 0.0)
+checkK(function () return (-3^0 + 5) // 3.0 end, 1.0)]]
 end
 checkK(function () return -3 % 5 end, 2)
+-- XXX Kernel Lua: no floating-point tests
 if not _KERNEL then
-checkK(function () return eval('return -((2.0^8 + -(-1)) % 8)/2 * 4 - 3') end, tonumber('-5.0'))
-checkK(function () return eval('return -((2^8 + -(-1)) % 8)//2 * 4 - 3') end, tonumber('-7.0'))
-checkK(function () return eval('0xF0.0 | 0xCC.0 ~ 0xAA & 0xFD') end, 0xF4)
+eval[[checkK(function () return -((2.0^8 + -(-1)) % 8)/2 * 4 - 3 end, -5.0)
+checkK(function () return -((2^8 + -(-1)) % 8)//2 * 4 - 3 end, -7.0)
+checkK(function () return 0xF0.0 | 0xCC.0 ~ 0xAA & 0xFD end, 0xF4)]]
 end
 checkK(function () return ~(~0xFF0 | 0xFF0) end, 0)
+-- XXX Kernel Lua: no floating-point tests
 if not _KERNEL then
-checkK(function () return eval('~~-100024.0') end, -100024)
+eval'checkK(function () ~~-100024.0 end, -100024)'
 end
 checkK(function () return ((100 << 6) << -4) >> 2 end, 100)
 
 
 -- no foldings
-check(function () return eval('return -0.0') end, 'LOADK', 'UNM', 'RETURN')
+-- XXX Kernel Lua: no floating-point tests
 if not _KERNEL then
-check(function () return 3/0 end, 'DIV', 'RETURN')
+eval[[check(function () return -0.0 end, 'LOADK', 'UNM', 'RETURN')
+check(function () return 3/0 end, 'DIV', 'RETURN')]]
 else
 check(function () return 3/0 end, 'IDIV', 'RETURN')
 end

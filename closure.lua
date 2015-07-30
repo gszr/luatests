@@ -145,10 +145,11 @@ function f(x)
   end
 end
 
+-- XXX Kernel Lua: no floating-point tests
 if not _KERNEL then
-y = f(10)
-w = eval('return 1.345')
-assert(y(20)(30) == 60+w)
+eval[[y = f(10)
+w = 1.345
+assert(y(20)(30) == 60+w)]]
 end
 
 -- testing closures x repeat-until
@@ -206,9 +207,7 @@ t()
 
 
 -- test for debug manipulation of upvalues
-if not _KERNEL then
 local debug = require'debug'
-end
 
 do
   local a , b, c = 3, 5, 7

@@ -148,7 +148,12 @@ assert(string.gsub('  alo alo  ', '^%s*(.-)%s*$', '%1') == 'alo alo')  -- double
 assert(string.gsub('alo  alo  \n 123\n ', '%s+', ' ') == 'alo alo 123 ')
 t = "abç d"
 a, b = string.gsub(t, '(.)', '%1@')
+-- XXX Kernel Lua: precedence bug
+if not _KERNEL then
+assert('@'..a == string.gsub(t, '', '@') and b == 5)
+else
 assert(('@'..a) == string.gsub(t, '', '@') and b == 5)
+end
 a, b = string.gsub('abçd', '(.)', '%0@', 2)
 assert(a == 'a@b@çd' and b == 2)
 assert(string.gsub('alo alo', '()[al]', '%1') == '12o 56o')
@@ -222,6 +227,7 @@ checkerror("invalid capture index %%1", string.gsub, "alo", "(%1)", "a")
 checkerror("invalid use of '%%'", string.gsub, "alo", ".", "%x")
 
 -- bug since 2.5 (C-stack overflow)
+-- XXX Kernel Lua: bug overflow
 if not _KERNEL then
 do
   local function f (size)

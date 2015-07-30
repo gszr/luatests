@@ -4,9 +4,6 @@ print "testing (parts of) table library"
 
 print "testing unpack"
 
-local os = require'os'
-local math = require'math'
-
 local unpack = table.unpack
 
 
@@ -41,8 +38,9 @@ assert(a==1 and x==nil)
 a,x = unpack({1,2}, 1, 1)
 assert(a==1 and x==nil)
 
+-- XXX Kernel Lua: no math std lib
 if not _KERNEL then
-do
+eval[[do
   local maxI = math.maxinteger
   local minI = math.mininteger
   local maxi = (1 << 31) - 1          -- maximum value for an int (usually)
@@ -66,11 +64,11 @@ do
   a, b = unpack(t, maxI - 1, maxI); assert(a == 12 and b == 23)
   a, b = unpack(t, maxI, maxI); assert(a == 23 and b == nil)
   a, b = unpack(t, maxI, maxI - 1); assert(a == nil and b == nil)
-  --[[t = {[minI] = 12.3, [minI + 1] = 23.5}
+  t = {[minI] = 12.3, [minI + 1] = 23.5}
   a, b = unpack(t, minI, minI + 1); assert(a == 12.3 and b == 23.5)
-  a, b = unpack(t, minI, minI); assert(a == 12.3 and b == nil)]]
+  a, b = unpack(t, minI, minI); assert(a == 12.3 and b == nil)
   a, b = unpack(t, minI + 1, minI); assert(a == nil and b == nil)
-end
+end]]
 end
 
 do   -- length is not an integer
@@ -110,6 +108,7 @@ do
   a = table.move({10,20,30}, 1, 0, 3)   -- do not move
   eqT(a, {10,20,30})
 
+  -- XXX Kernel Lua: no math std lib
   if not _KERNEL then
   local max = math.maxinteger
   a = table.move({[max - 2] = 1, [max - 1] = 2, [max] = 3},
@@ -130,7 +129,7 @@ do
           t[1] = string.format("%s(%d,%d)", t[1], k, v)
       end})
   table.move(a, 10, 13, 3, b)
-  -- XXX bug: b[1] = (3,100)(6,130)
+  -- XXX Kernel Lua: b[1] = (3,100)(6,130)
   if not _KERNEL then
   assert(b[1] == "(3,100)(4,110)(5,120)(6,130)")
   end
@@ -203,6 +202,7 @@ end
 
 local x = os.clock()
 table.sort(a)
+-- XXX Kernel Lua: kernel os.clock has microseconds precision
 if not _KERNEL then
 print(string.format("Sorting %d elements in %.2f sec.", limit, os.clock()-x))
 else
@@ -212,6 +212,7 @@ check(a)
 
 x = os.clock()
 table.sort(a)
+-- XXX Kernel Lua: kernel os.clock has microseconds precision
 if not _KERNEL then
 print(string.format("Re-sorting %d elements in %.2f sec.", limit, os.clock()-x))
 else
@@ -226,6 +227,7 @@ end
 
 x = os.clock(); i=0
 table.sort(a, function(x,y) i=i+1; return y<x end)
+-- XXX Kernel Lua: kernel os.clock has microseconds precision
 if not _KERNEL then
 print(string.format("Invert-sorting other %d elements in %.2f sec., with %i comparisons",
       limit, os.clock()-x, i))
@@ -241,14 +243,19 @@ table.sort{}  -- empty array
 for i=1,limit do a[i] = false end
 x = os.clock();
 table.sort(a, function(x,y) return nil end)
+-- XXX Kernel Lua: kernel os.clock has microseconds precision
 if not _KERNEL then
 print(string.format("Sorting %d equal elements in %.2f sec.", limit, os.clock()-x))
 else
 print(string.format("Sorting %d equal elements in %d msec.", limit, (os.clock()-x)/1000))
 end
 check(a, function(x,y) return nil end)
--- XXX: bug da precedencia
+-- XXX Kernel Lua: precedence bug
+if not _KERNEL then
+for i,v in pairs(a) do assert(not v or i=='n' and v==limit) end
+else
 for i,v in pairs(a) do assert(not v or (i=='n' and v==limit)) end
+end
 
 A = {"álo", "\0first :-)", "alo", "then this one", "45", "and a new"}
 table.sort(A)

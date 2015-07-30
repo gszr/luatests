@@ -44,11 +44,14 @@ else --[
 
 local function log2 (x) return math.log(x, 2) end
 
---[[local function mp2 (n)   -- minimum power of 2 >= n
+-- XXX Kernel Lua: no expo operator and math lib
+if not _KERNEL then
+eval[[local function mp2 (n)   -- minimum power of 2 >= n
   local mp = 2^math.ceil(log2(n))
   assert(n == 0 or (mp/2 < n and n <= mp))
   return mp
 end]]
+end
 
 local function fb (n)
   local r, nn = T.int2fb(n)
@@ -57,14 +60,16 @@ local function fb (n)
 end
 
 -- test fb function
---[[local a = 1
+-- XXX Kernel Lua: no expo operator and math lib
+if not _KERNEL then
+eval[[local a = 1
 local lim = 2^30
 while a < lim do
   local n = fb(a)
   assert(a <= n and n <= a*1.125)
   a = math.ceil(a*1.3)
 end]]
-
+end
  
 local function check (t, na, nh)
   local a, h = T.querytab(t)
@@ -76,16 +81,22 @@ end
 
 
 -- testing C library sizes
---[[do
+-- XXX Kernel Lua: no math lib
+-- function mp2
+if not _KERNEL then
+eval[[do
   local s = 0
   for _ in pairs(math) do s = s + 1 end
   check(math, 0, mp2(s))
 end]]
-
+end
 
 -- testing constructor sizes
 local lim = 40
---[[local s = 'return {'
+-- XXX Kernel Lua: no math lib
+-- function mp2
+if not _KERNEL then
+eval[[local s = 'return {'
 for i=1,lim do
   s = s..i..','
   local s = s
@@ -96,7 +107,7 @@ for i=1,lim do
     s = string.format('%sa%d=%d,', s, k, k)
   end
 end]]
-
+end
 
 -- tests with unknown number of elements
 local a = {}
@@ -112,7 +123,10 @@ end
 
 
 -- testing tables dynamically built
---[[local lim = 130
+-- XXX Kernel Lua: no math lib
+-- function mp2
+if not _KERNEL then
+eval[[local lim = 130
 local a = {}; a[2] = 1; check(a, 0, 1)
 a = {}; a[0] = 1; check(a, 0, 1); a[2] = 1; check(a, 0, 2)
 a = {}; a[0] = 1; a[1] = 1; check(a, 1, 1)
@@ -129,6 +143,7 @@ for i = 1,lim do
   assert(#a == 0)
   check(a, 0, mp2(i))
 end]]
+end
 
 a = {}
 for i=1,16 do a[i] = i end
@@ -146,7 +161,10 @@ do
 end
 
 -- reverse filling
---[[for i=1,lim do
+-- XXX Kernel Lua: no math lib
+-- function mp2
+if not _KERNEL then
+eval[[for i=1,lim do
   local a = {}
   for i=i,1,-1 do a[i] = i end   -- fill in reverse
   check(a, mp2(i), 0)
@@ -166,6 +184,7 @@ end
 local a = {}
 for i=1,lim do a[i] = true; foo(i, table.unpack(a)) end
 ]]
+end
 
 end  --]
 
@@ -225,13 +244,9 @@ assert(string.find(select(2, pcall(ipairs)), "bad argument"))
 
 print('+')
 
-if _KERNEL then
-local math = require'math'
-end
-
 a = {}
 for i=0,10000 do
-  if math.fmod(i, 10) ~= 0 then
+  if math.fmod(i,10) ~= 0 then
     a['x'..i] = i
   end
 end
@@ -248,9 +263,12 @@ do   -- clear global table
   local a = {}
   for n,v in pairs(_G) do a[n]=v end
   for n,v in pairs(a) do
+	-- XXX Kernel Lua: put module tables in package.loaded
+	-- so they don't get erased
     if _KERNEL then
-		package = {}
-		package.loaded = {}
+		setfield('package.loaded', {})
+		package.loaded.os = os
+		package.loaded.math = math
 		package.loaded.string = string
 		package.loaded.table = table
 		package.loaded.debug = debug
@@ -294,15 +312,22 @@ end
 function table.maxn (t)
   local max = 0
   for k in pairs(t) do
-    --max = (type(k) == 'number') and math.max(max, k) or max
+	-- XXX Kernel Lua TODO math.max
+	if not _KERNEL then
+    max = (type(k) == 'number') and math.max(max, k) or max
+	else
     max = (type(k) == 'number') and ((max > tonumber(k)) and max or tonumber(k)) or max
+	end
   end
   return max
 end
 
 assert(table.maxn{} == 0)
 assert(table.maxn{["1000"] = true} == 0)
---assert(table.maxn{["1000"] = true, [24.5] = 3} == 24.5)
+-- XXX Kernel Lua: no floating-point tests
+if not _KERNEL then
+eval'assert(table.maxn{["1000"] = true, [24.5] = 3} == 24.5)'
+end
 assert(table.maxn{[1000] = true} == 1000)
 if not _KERNEL then
 assert(table.maxn{[10] = true, [100*math.pi] = print} == 100*math.pi)
@@ -311,16 +336,26 @@ end
 table.maxn = nil
 
 -- int overflow
---[[a = {}
+-- XXX Kernel Lua TODO use math.iexp
+if not _KERNEL then
+eval[[a = {}
 for i=0,50 do a[2^i] = true end
 assert(a[#a])]]
+end
 
 print('+')
 
 
 -- erasing values
-local t = {[{1}] = 1, [{2}] = 2, [string.rep("x ", 4)] = 3,
-           --[[[100.3] = 4,]] [4] = 5}
+-- XXX Kernel Lua: no floating-point tests
+local t
+if not _KERNEL then
+eval[[t = {[{1}] = 1, [{2}] = 2, [string.rep("x ", 4)] = 3,
+           [100.3] = 4, [4] = 5}]]
+else
+t = {[{1}] = 1, [{2}] = 2, [string.rep("x ", 4)] = 3,
+           [4] = 5}
+end
 
 local n = 0
 for k, v in pairs( t ) do
@@ -330,7 +365,13 @@ for k, v in pairs( t ) do
   collectgarbage()
   assert(t[k] == nil)
 end
+
+-- XXX Kernel Lua: number of items in t
+if not _KERNEL then
+assert(n == 5)
+else
 assert(n == 4)
+end
 
 
 local function test (a)
@@ -488,29 +529,44 @@ do
   local a
   -- integer count
   a = 0; for i=1, 1, 1 do a=a+1 end; assert(a==1)
-  --TODO
-  --a = 0; for i=10000, 1e4, -1 do a=a+1 end; assert(a==1)
+  -- XXX Kernel Lua: no exponents
+  if not _KERNEL then
+  eval'a = 0; for i=10000, 1e4, -1 do a=a+1 end; assert(a==1)'
+  end
   a = 0; for i=10000, 10000, -1 do a=a+1 end; assert(a==1)
-  --a = 0; for i=1, 0.99999, 1 do a=a+1 end; assert(a==0)
-  --TODO
-  --a = 0; for i=9999, 1e4, -1 do a=a+1 end; assert(a==0)
+  -- XXX Kernel Lua: no floating-point tests
+  if not _KERNEL then
+  eval'a = 0; for i=1, 0.99999, 1 do a=a+1 end; assert(a==0)'
+  end
+  -- XXX Kernel Lua: no exponents
+  if not _KERNEL then
+  eval'a = 0; for i=9999, 1e4, -1 do a=a+1 end; assert(a==0)'
+  end
   a = 0; for i=9999, 10000, -1 do a=a+1 end; assert(a==0)
-  --a = 0; for i=1, 0.99999, -1 do a=a+1 end; assert(a==1)
+  -- XXX Kernel Lua: no floating-point tests
+  if not _KERNEL then
+  eval'a = 0; for i=1, 0.99999, -1 do a=a+1 end; assert(a==1)'
+  end
 
   -- float count
-  --[[a = 0; for i=0, 0.999999999, 0.1 do a=a+1 end; assert(a==10)
+  -- XXX Kernel Lua: no floating-point tests
+  if not _KERNEL then
+  eval[[a = 0; for i=0, 0.999999999, 0.1 do a=a+1 end; assert(a==10)
   a = 0; for i=1.0, 1, 1 do a=a+1 end; assert(a==1)
   a = 0; for i=-1.5, -1.5, 1 do a=a+1 end; assert(a==1)
   a = 0; for i=1e6, 1e6, -1 do a=a+1 end; assert(a==1)
   a = 0; for i=1.0, 0.99999, 1 do a=a+1 end; assert(a==0)
   a = 0; for i=99999, 1e5, -1.0 do a=a+1 end; assert(a==0)
   a = 0; for i=1.0, 0.99999, -1 do a=a+1 end; assert(a==1)]]
+  end
 end
 
 -- conversion
 a = 0; for i="10","1","-2" do a=a+1 end; assert(a==5)
 
---[[do  -- checking types
+-- XXX Kernel Lua: no floating-point tests
+if not _KERNEL then
+eval[[do  -- checking types
   local c
   local function checkfloat (i)
     assert(math.type(i) == "float")
@@ -563,6 +619,7 @@ a = 0; for i="10","1","-2" do a=a+1 end; assert(a==5)
   for i = math.maxinteger, 10e100, -1 do assert(false) end
 
 end]]
+end
 
 collectgarbage()
 

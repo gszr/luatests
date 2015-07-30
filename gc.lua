@@ -147,6 +147,7 @@ x = "012345678901234567890123456789012345678901234567890123456789012345678901234
 assert(string.len(x)==80)
 s = ''
 n = 0
+-- XXX Kernel Lua: math lib
 if not _KERNEL then
 k = math.min(300, (math.maxinteger // 80) // 2)
 while n < k do s = s..x; n=n+1; j=tostring(n)  end
@@ -244,7 +245,12 @@ for i=1,lim do a[i] = i end
 for i=1,lim do local s=string.rep('@', i); a[s] = s..'#' end
 collectgarbage()
 local i = 0
+-- XXX Kernel Lua: precedence bug
+if not _KERNEL then
+for k,v in pairs(a) do assert(k==v or k..'#'==v); i=i+1 end
+else
 for k,v in pairs(a) do assert(k==v or (k..'#')==v); i=i+1 end
+end
 assert(i == 2*lim)
 
 a = {}; setmetatable(a, {__mode = 'v'});
@@ -260,7 +266,12 @@ for i=1,lim do local t={}; a[t]=t end
 for i=1,lim do a[i+lim]=i..'x' end
 collectgarbage()
 local i = 0
+-- XXX Kernel Lua: precedence bug
+if not _KERNEL then
+for k,v in pairs(a) do assert(k==v or k-lim..'x' == v); i=i+1 end
+else
 for k,v in pairs(a) do assert(k==v or (k-lim..'x') == v); i=i+1 end
+end
 assert(i == 2*lim)
 
 a = {}; setmetatable(a, {__mode = 'vk'});

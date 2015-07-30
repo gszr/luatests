@@ -47,19 +47,20 @@ function t:f (...) local arg = {...}; return self[...]+#arg end
 assert(t:f(1,4) == 3 and t:f(2) == 11)
 print('+')
 
+-- XXX Kernel Lua: no floating-point tests
 if not _KERNEL then
-lim = 20
+eval[[lim = 20
 local i, a = 1, {}
-while i <= lim do a[i] = i+tonumber('0.3'); i=i+1 end
+while i <= lim do a[i] = i+0.3; i=i+1 end
 
 function f(a, b, c, d, ...)
   local more = {...}
-  assert(a == tonumber('1.3') and more[1] == tonumber('5.3') and
-         more[lim-4] == lim+tonumber('0.3') and not more[lim-3])
+  assert(a == 1.3 and more[1] == 5.3 and
+         more[lim-4] == lim+0.3 and not more[lim-3])
 end
 
 function g(a,b,c)
-  assert(a == tonumber('1.3') and b == tonumber('2.3') and c == tonumber('3.3'))
+  assert(a == 1.3 and b == 2.3 and c == 3.3)
 end
 
 call(f, a)
@@ -68,7 +69,7 @@ call(g, a)
 a = {}
 i = 1
 while i <= lim do a[i] = i; i=i+1 end
-assert(call(math.max, a) == lim)
+assert(call(math.max, a) == lim)]]
 end
 
 print("+")

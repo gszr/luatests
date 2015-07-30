@@ -2,10 +2,7 @@
 
 ;;print "testing syntax";;
 
-local debug = debug
-if not _KERNEL then
-debug = require "debug"
-end
+local debug = require "debug"
 
 -- testing semicollons
 do ;;; end
@@ -18,48 +15,71 @@ if false then a = 3 // 0; a = 0 % 0 end
 
 
 -- testing priorities
-
+-- XXX Kernel Lua: no expo operator
 if not _KERNEL then
-eval('assert(2^3^2 == 2^(3^2))');
-eval('assert(2^3*4 == (2^3)*4)');
-eval('assert(2.0^-2 == 1/4 and -2^- -2 == - - -4)');
+eval[[assert(2^3^2 == 2^(3^2));
+assert(2^3*4 == (2^3)*4);
+assert(2.0^-2 == 1/4 and -2^- -2 == - - -4);]]
 end
 assert(not nil and 2 and not(2>3 or 3<2));
 assert(-3-1-5 == 0+0-9);
+-- XXX Kernel Lua: no expo operator
 if not _KERNEL then
-eval('assert(-2^2 == -4 and (-2)^2 == 4 and 2*2-3-1 == 0)');
+eval'assert(-2^2 == -4 and (-2)^2 == 4 and 2*2-3-1 == 0)';
 end
 assert(-3%5 == 2 and -3+5 == 2)
--- TODO precedence broken?
+-- XXX Kernel Lua: precedence bug
+if not _KERNEL then
+assert(2*1+3/3 == 3 and 1+2 .. 3*1 == "33");
+else
 assert(2*1+3/3 == 3 and (1+2 .. 3*1) == "33");
+end
 assert(not(2+1 > 3*1) and "a".."b" > "a");
 
+-- XXX Kernel Lua: precedence bug
+if not _KERNEL then
+assert("7" .. 3 << 1 == 146)
+assert(10 >> 1 .. "9" == 0)
+assert(10 | 1 .. "9" == 27)
+else
 assert(("7" .. 3 << 1) == 146)
 assert((10 >> (1 .. "9")) == 0)
 assert((10 | (1 .. "9")) == 27)
+end
 
+-- XXX Kernel Lua: precedence bug
+if not _KERNEL then
+assert(0xF0 | 0xCC ~ 0xAA & 0xFD == 0xF4)
+assert(0xFD & 0xAA ~ 0xCC | 0xF0 == 0xF4)
+assert(0xF0 & 0x0F + 1 == 0x10)
+else
 assert((0xF0 | (0xCC ~ 0xAA & 0xFD)) == 0xF4)
 assert((0xFD & (0xAA ~ 0xCC) | 0xF0) == 0xF4)
 assert((0xF0 & (0x0F + 1)) == 0x10)
-
-if not _KERNEL then
-eval('assert(3^4//2^3//5 == 2)')
 end
 
+-- XXX Kernel Lua: no expo operator
 if not _KERNEL then
-eval('assert(-3+4*5//2^3^2//9+4%10/3 == (-3)+(((4*5)//(2^(3^2)))//9)+((4%10)/3))')
+eval'assert(3^4//2^3//5 == 2)'
+eval'assert(-3+4*5//2^3^2//9+4%10/3 == (-3)+(((4*5)//(2^(3^2)))//9)+((4%10)/3))'
 end
 
 assert(not ((true or false) and nil))
+-- XXX Kernel Lua: precedence bug
+if not _KERNEL then
+assert(      true or false  and nil)
+else
 assert(      true or (false  and nil))
+end
 
 -- old bug
 assert((((1 or false) and true) or false) == true)
 assert((((nil and true) or false) and true) == false)
 
 local a,b = 1,nil;
+-- XXX Kernel Lua: no floating-point tests
 if not _KERNEL then
-eval('assert(-(1 or 2) == -1 and (1 and 2)+(-1.25 or -4) == 0.75)');
+eval'assert(-(1 or 2) == -1 and (1 and 2)+(-1.25 or -4) == 0.75)';
 end
 x = ((b or a)+1 == 2 and (10 or a)+1 == 11); assert(x);
 x = (((2<3) or 1) == true and (2<3 and 4) == 4); assert(x);
@@ -113,9 +133,15 @@ a=nil
 while not a do
   a=0; for i=1,n do for i=i,1,-1 do a=a+1; t[i]=1; end; end;
 end
+-- XXX Kernel Lua: precedence bug
+if not _KERNEL then
+assert(a == n*(n+1)/2 and i==3);
+else
 assert(a == (n*(n+1))/2 and i==3);
+end
 assert(t[1] and t[n] and not t[0] and not t[n+1])
 
+-- XXX Kernel Lua: no math std lib
 if not _KERNEL then
 function f(b)
   local x = 1;
@@ -199,8 +225,15 @@ f = string.gsub(f, "%s+", "\n");   -- force a SETLINE between opcodes
 f,a = load(f)();
 assert(a.a == 1 and a.b)
 
+-- XXX Kernel Lua: precedence bug
+if not _KERNEL then
+function g (a,b,c,d,e)
+  if not (a>=b or c or d and e or nil) then return 0; else return 1; end;
+end
+else
 function g (a,b,c,d,e)
   if not (a>=b or c or (d and e) or nil) then return 0; else return 1; end;
+end
 end
 
 function h (a,b,c,d,e)
@@ -221,7 +254,12 @@ assert(f(1,2,nil,nil,'x') == nil and g(1,2,nil,nil,'x') == 0 and
 assert(f(1,2,nil,1,nil) == nil and g(1,2,nil,1,nil) == 0 and
                                    h(1,2,nil,1,nil) == 0)
 
+-- XXX Kernel Lua: precedence bug
+if not _KERNEL then
+assert(1 and 2<3 == true and 2<3 and 'a'<'b' == true)
+else
 assert((1 and 2<3) == true and 2<3 and ('a'<'b') == true)
+end
 x = 2<3 and not 3; assert(x==false)
 x = 2<1 or (2>1 and 'a'); assert(x=='a')
 
@@ -242,9 +280,7 @@ a,b = F(nil)==nil; assert(a == true and b == nil)
 ----------------------------------------------------------------
 ------------------------------------------------------------------
 
-if _KERNEL then
 os = require'os'
-end
 
 -- sometimes will be 0, sometimes will not...
 _ENV.GLOB1 = os.time() % 2
@@ -258,8 +294,8 @@ local basiccases = {
   {"(0==_ENV.GLOB1)", 0 == _ENV.GLOB1},
 }
 
--- XXX bug dos string.format: por algum motivo a string retornada
--- tem sempre 7 caracteres; caso seja maior, eh truncada
+-- XXX Kernel Lua: bug dos 7 caracteres
+-- "(0==_ENV.GLOB1)" eh truncada para 7 caracteres
 if _KERNEL then
 basiccases[5] = nil
 end
@@ -307,7 +343,9 @@ local prog = [[if %s then IX = true end; return %s]]
 
 local i = 0
 
---XXX bug dos parenteses
+--XXX Kernel Lua: fugir do bug dos 7 caracteres
+-- para level > 1, createcases cria casos de teste com parenteses
+-- e o bug aparece
 if _KERNEL then
 	level = 1
 end
@@ -315,7 +353,7 @@ end
 for n = 1, level do
   for _, v in pairs(cases[n]) do
     local s = v[1]
-	local p = load(string.format(prog, s, s))
+    local p = load(string.format(prog, s, s))
     IX = false
     assert(p() == v[2] and IX == not not v[2])
     i = i + 1

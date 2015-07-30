@@ -12,7 +12,7 @@ do
 local a=1
 end
 
--- XXX passa na primeira execuao, para nas seguintes
+-- XXX Kernel Lua: assert passa apenas na primeira execucao
 if not _KERNEL then
 assert(not debug.gethook())
 end
@@ -39,7 +39,7 @@ do
   a = debug.getinfo(print, "L")
   assert(a.activelines == nil)
   local b = debug.getinfo(test, "SfL")
-  -- XXX bug: b.short_src = [string "db.lua"]
+  -- XXX Kernel Lua: bug? b.short_src = [string "db.lua"]
   if not _KERNEL then
   assert(b.name == nil and b.what == "Lua" and b.linedefined == 17 and
          b.lastlinedefined == b.linedefined + 10 and
@@ -56,7 +56,7 @@ end
 a = "function f () end"
 local function dostring (s, x) return load(s, x)() end
 dostring(a)
--- XXX bug: string.format retorna sempre uma string com no max 7 chars 
+-- XXX Kernel Lua: string.format retorna sempre uma string com no max 7 chars 
 if not _KERNEL then
 assert(debug.getinfo(f).short_src == string.format('[string "%s"]', a))
 end
@@ -106,6 +106,7 @@ repeat
   if 3<4 then a=1 else break end; f()
   while 1 do local x=10; break end; f()
   local b = 1
+  -- XXX Kernel Lua: no math std lib
   if not _KERNEL then
   if 3>4 then return math.sin(1) end; f()
   end
@@ -119,6 +120,7 @@ repeat
   assert(g(f) == 'a')
 until 1
 
+-- XXX Kernel Lua: no math std lib
 if not _KERNEL then
 test([[if
 math.sin(1)
@@ -155,7 +157,8 @@ while a<=3 do
   a=a+1
 end
 ]], {1,2,3,4,3,4,3,4,3,5})
-
+  
+-- XXX Kernel Lua: no math std lib
 if not _KERNEL then
 test([[while math.sin(1) do
   if math.sin(1)
@@ -274,11 +277,15 @@ function f(a,b)
   local _, x = debug.getlocal(1, 1)
   local _, y = debug.getlocal(1, 2)
   assert(x == a and y == b)
-  --TODO precedence broken?
+  -- XXX Kernel Lua: precedence bug
+  if not _KERNEL then
+  assert(debug.setlocal(2, 3, "pera") == "AA".."AA")
+  else
   assert(debug.setlocal(2, 3, "pera") == ("AA".."AA"))
+  end
   assert(debug.setlocal(2, 4, "maçã") == "B")
   x = debug.getinfo(2)
-  --XXX bug: string.find retorna nil
+  --XXX Kernel Lua: string.find retorna nil
   if not _KERNEL then
   assert(x.func == g and x.what == "Lua" and x.name == 'g' and
          x.nups == 2 and string.find(x.source, "^@.*db%.lua$"))
@@ -305,6 +312,7 @@ assert(debug.getinfo(1, "l").currentline == L+11)  -- check count of lines
 
 function g(...)
   local arg = {...}
+  -- XXX Kernel Lua: no math std lib
   if not _KERNEL then
   do local a,b,c; a=math.sin(40); end
   end
@@ -426,15 +434,17 @@ debug.sethook(function (e) a=a+1 end, "", 4000)
 a=0; for i=1,1000 do end; assert(a == 0)
 
 do
-  -- TODO int exp
-  --debug.sethook(print, "", 2^24 - 1)   -- count upperbound
+  -- XXX Kernel Lua: no expo operator
+  if not _KERNEL then
+  eval'debug.sethook(print, "", 2^24 - 1)'   -- count upperbound
+  else
   debug.sethook(print, "", 16777216 - 1)   -- count upperbound
+  end
   local f,m,c = debug.gethook()
   assert(({debug.gethook()})[3] == 16777216 - 1)
 end
 
 debug.sethook()
-
 
 -- tests for tail calls
 local function f (x)
@@ -689,17 +699,23 @@ setmetatable(a, {
 
 local b = setmetatable({}, getmetatable(a))
 
+-- XXX Kernel Lua: no expo operator
 if not _KERNEL then
--- TODO pensar melhor no pow
-assert(a[3] == "__index" --[[and a^3 == "__pow"]] and a..a == "__concat")
+eval'assert(a[3] == "__index" and a^3 == "__pow" and a..a == "__concat")'
 assert(a/3 == "__div" and 3%a == "__mod")
 else
 assert(a/3 == "__idiv" and 3%a == "__mod")
 end
 assert(a+3 == "__add" and 3-a == "__sub" and a*3 == "__mul" and
        -a == "__unm" and #a == "__len" and a&3 == "__band")
+-- XXX Kernel Lua: precedence bug
+if not _KERNEL then
+assert(a|3 == "__bor" and 3~a == "__bxor" and a<<3 == "__shl" and
+       a>>1 == "__shr")
+else
 assert((a|3) == "__bor" and (3~a) == "__bxor" and a<<3 == "__shl" and
        a>>1 == "__shr")
+end
 assert (a==b and a.op == "__eq")
 assert (a>=b and a.op == "__le")
 assert (a>b and a.op == "__lt")
@@ -716,10 +732,7 @@ end
 
 print("testing debug functions on chunk without debug info")
 prog = [[-- program to be loaded without debug information
-local debug = debug
-if not _KERNEL then
-debug = require'debug'
-end
+local debug = require'debug'
 local a = 12  -- a local variable
 
 local n, v = debug.getlocal(1, 1)
