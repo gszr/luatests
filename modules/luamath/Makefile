@@ -1,6 +1,6 @@
 #	$NetBSD: Makefile,v 1.3 2015/02/02 14:03:05 lneto Exp $
 
-.include "../Makefile.inc"
+#.include "../Makefile.inc"
 
 KMOD=		luamath
 SRCS=		luamath.c
