@@ -9,6 +9,7 @@ fi
 echo;
 sudo modload lua 
 sudo modload luaos 
+sudo modload luaio
 sudo modload luamath
 sudo sysctl -w kern.lua.verbose=1
 sudo sysctl -w ddb.onpanic=1

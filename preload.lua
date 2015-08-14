@@ -3,7 +3,10 @@
 _KERNEL	= true
 
 os   = require'os'
+io 	 = require'io'
 math = require'math'
+
+_require = require
 
 function require (module)
 	return _G[module]
