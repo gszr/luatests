@@ -1,0 +1,9 @@
+Index: external/mit/lua/dist/src/lparser.c
+===================================================================
+RCS file: /cvsroot/src/external/mit/lua/dist/src/lparser.c,v
+retrieving revision 1.3
+diff -r1.3 lparser.c
+1034a1035
+> #ifndef _KERNEL
+1035a1037
+> #endif

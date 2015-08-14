@@ -1,0 +1,15 @@
+Index: external/mit/lua/usr.bin/lua/Makefile
+===================================================================
+RCS file: /cvsroot/src/external/mit/lua/usr.bin/lua/Makefile,v
+retrieving revision 1.5
+diff -r1.5 Makefile
+7c7
+< CPPFLAGS+=	-DLUA_USE_READLINE
+---
+> CPPFLAGS+=	-DLUA_USE_POSIX
+9,10c9,10
+< LDADD+=		-llua -lm -ledit -lterminfo
+< DPADD+=		${LIBLUA} ${LIBM} ${LIBEDIT} ${LIBTERMINFO}
+---
+> LDADD+=		-llua -lm 
+> DPADD+=		${LIBLUA} ${LIBM}

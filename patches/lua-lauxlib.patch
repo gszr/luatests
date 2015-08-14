@@ -1,0 +1,44 @@
+Index: external/mit/lua/dist/src/lauxlib.c
+===================================================================
+RCS file: /cvsroot/src/external/mit/lua/dist/src/lauxlib.c,v
+retrieving revision 1.4
+diff -r1.4 lauxlib.c
+245a246,263
+> #else /* _KERNEL */
+> LUALIB_API int luaL_fileresult (lua_State *L, int stat, const char *fname) {
+>   if (stat) {
+>     lua_pushboolean(L, 1);
+>     return 1;
+>   }
+>   else {
+>     lua_pushnil(L);
+>     if (fname)
+> 	  //XXX better error message?
+>       lua_pushfstring(L, "%s: %s", fname, "error opening the file");
+>     else
+>       lua_pushstring(L, "error opening the file");
+> 	//XXX generic error code
+>     lua_pushinteger(L, -1);
+>     return 3;
+>   }
+> } 
+Index: external/mit/lua/dist/src/lauxlib.h
+===================================================================
+RCS file: /cvsroot/src/external/mit/lua/dist/src/lauxlib.h,v
+retrieving revision 1.3
+diff -r1.3 lauxlib.h
+74d73
+< #ifndef _KERNEL
+75a75
+> #ifndef _KERNEL
+206a207,216
+> #else /* _KERNEL */
+> 
+> #define LUA_FILEHANDLE			"file_t*"
+> 
+> typedef struct luaL_Stream {
+>   int fd;	/* quick and dirty fix... how can i get an fd from file_t? */
+>   file_t *f;  /* stream (NULL for incompletely created streams) */
+>   lua_CFunction closef;  /* to close stream (NULL for closed streams) */
+> } luaL_Stream;
+>  
