@@ -2,9 +2,6 @@
 
 print "testing RK"
 
--- XXX Kernel Lua: skipping verybig.lua testes for now -- depends on io lib
-if not _KERNEL then
-
 -- testing opcodes with RK arguments larger than K limit
 local function foo ()
   local dummy = {
@@ -209,13 +206,7 @@ for s in string.gmatch(prog, "$([^$]+)") do
 end
 io.close()
 result = dofile(file)
+print(result)
 assert(os.remove(file))
 print'OK'
 return result
-
-else
-
-print'skipping verybig.lua'
-return 10
-
-end

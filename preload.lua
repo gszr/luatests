@@ -5,6 +5,9 @@ _KERNEL	= true
 os   = require'os'
 io 	 = require'io'
 math = require'math'
+base = require'base'
+
+dofile = base.dofile
 
 _require = require
 
