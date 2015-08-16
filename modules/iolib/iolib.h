@@ -9,4 +9,6 @@ file_t* kfopen(const char*, const char*, int*);
 
 char kgetc(int fd);
 
+int kremove(const char*);
+
 #endif

@@ -1,8 +1,6 @@
 /* Lua OS module */
 
 #include <sys/time.h>
-#include <sys/uio.h>
-#include <sys/vfs_syscalls.h>
 #include <sys/lua.h>
 #ifdef _MODULE
 #include <sys/module.h>
@@ -95,7 +93,7 @@ static int
 /* loslib.c */
 os_remove (lua_State *L) {
   const char *filename = luaL_checkstring(L, 1);
-  return luaL_fileresult(L, do_sys_unlink(filename, UIO_SYSSPACE) == 0, filename);
+  return luaL_fileresult(L, kremove(filename) == 0, filename);
 } 
 
 static int

@@ -3,6 +3,8 @@
 #include <sys/stat.h>
 #include <sys/vnode.h>
 #include <sys/ktrace.h>
+#include <sys/uio.h>
+#include <sys/vfs_syscalls.h>
 
 #include "iolib.h"
 
@@ -57,7 +59,13 @@ kgetc(int fd)
 	else
 		return -1;
 }
- 
+
+int
+kremove(const char *path)
+{
+	return do_sys_unlink(path, UIO_SYSSPACE);	
+}
+
 static int
 dofileread_(int fd, struct file *fp, void *buf, size_t nbyte,
 	off_t *offset, int flags, register_t *retval)
