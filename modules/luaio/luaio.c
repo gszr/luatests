@@ -82,14 +82,7 @@ opencheck (lua_State *L, const char *fname, const char *mode) {
 	LStream *p = newfile(L);
 	int fd;
 	//XXX handle modes
-	switch(mode[0]) {
-	case 'w':
-		p->f = kfopen(fname, FWRITE | O_CREAT, ALLPERMS, &fd);
-		break;
-	case 'r':
-		p->f = kfopen(fname, FREAD, ALLPERMS, &fd);
-		break;
-	}
+	p->f = kfopen(fname, mode, &fd);
 	p->fd = fd;
   	if (p->f == NULL)
     	luaL_error(L, "cannot open file '%s'", fname);
@@ -185,21 +178,6 @@ static int f_write (lua_State *L) {
 	return g_write(L, f, 2);
 }
 
-/* */ 
-
-static char
-l_getc(LStream *f)
-{
-	char ch;
-	size_t n;
-	//XXX
-	kread(f->fd, &ch, 1, &n);
-	if (n == 1)
-		return ch;
-	else
-		return -1;
-}
-
 /* io.read starts here */
 static int read_line (lua_State *L, LStream *f, int chop) {
   luaL_Buffer b;
@@ -209,7 +187,7 @@ static int read_line (lua_State *L, LStream *f, int chop) {
     char *buff = luaL_prepbuffer(&b);  /* pre-allocate buffer */
     int i = 0;
     //XXX l_lockfile(f);  /* no memory errors can happen inside the lock */
-    while (i < LUAL_BUFFERSIZE && (c = l_getc(f)) != -1 && c != '\n')
+    while (i < LUAL_BUFFERSIZE && (c = kgetc(f->fd)) != -1 && c != '\n')
       buff[i++] = c;
     //XXX l_unlockfile(f);
     luaL_addsize(&b, i);

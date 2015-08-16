@@ -6,6 +6,8 @@
 
 #include "iolib.h"
 
+#define PERMS ALLPERMS
+
 int
 kclose(int fd)
 {
@@ -15,23 +17,45 @@ kclose(int fd)
 } 
 
 int
-kopen(const char *path, int flags, int mode, int *fd)
+kopen(const char *path, int mode, int perms, int *fd)
 {
-	return fd_open(path, flags, mode, fd);
+	return fd_open(path, mode, perms, fd);
 }
 
 struct file*
-kfopen(const char *path, int flags, int mode, int *fd)
+kfopen(const char *path, const char *mode, int *fd)
 {
 	int err;
 	struct file *fp;
+	int omode;
 
-	if ((err = kopen(path, flags, mode, fd)) != 0)
+	if (*mode == 'r')
+		omode = FREAD;
+	else if (*mode == 'w')
+		omode = FWRITE;
+	else
 		return NULL;
+
+	if ((err = kopen(path, omode, PERMS, fd)) != 0)
+		return NULL;
+
 	fp = fd_getfile(*fd);
 	fd_putfile(*fd);
 	
     return fp;
+}
+
+char
+kgetc(int fd)
+{
+	char ch;
+	size_t n;
+	//XXX
+	kread(fd, &ch, 1, &n);
+	if (n == 1)
+		return ch;
+	else
+		return -1;
 }
  
 static int
