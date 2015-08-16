@@ -1,4 +1,5 @@
 #include <sys/filedesc.h>
+#include <sys/stat.h>
 #include <sys/fcntl.h>
 
 #include "mkstemp.h"
@@ -24,7 +25,7 @@ mkstemp(char *tmp)
 	s++;
 	i = 'a';
 
-	while ((fd_open(tmp, O_CREAT|O_EXCL|O_RDWR, 0600, &fd)) != 0) {
+	while ((fd_open(tmp, O_CREAT|O_EXCL|O_RDWR, ALLPERMS, &fd)) != 0) {
 		if (i == 'z')
 			return(-1);
 		*s = i++;
