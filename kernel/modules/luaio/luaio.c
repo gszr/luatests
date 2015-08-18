@@ -14,6 +14,11 @@
 
 #include "../iolib/iolib.h"
 
+/* std descriptors reference /dev/null */
+#define FD_STDIN	0
+#define FD_STDOUT	1
+#define FD_STDERR	2
+
 #define IO_PREFIX	"_IO_"
 #define IO_INPUT	(IO_PREFIX "input")
 #define IO_OUTPUT	(IO_PREFIX "output")
@@ -88,7 +93,6 @@ opencheck (lua_State *L, const char *fname, const char *mode) {
     	luaL_error(L, "cannot open file '%s'", fname);
 	return p;
 }
- 
 
 static int 
 g_iofile (lua_State *L, const char *f, const char *mode) {
@@ -315,6 +319,48 @@ static void createmeta (lua_State *L, const luaL_Reg m[]) {
 }
 
 
+/*
+** function to (not) close the standard files stdin, stdout, and stderr
+*/
+static int io_noclose (lua_State *L) {
+  LStream *p = tolstream(L);
+  p->closef = &io_noclose;  /* keep file opened */
+  lua_pushnil(L);
+  lua_pushliteral(L, "cannot close standard file");
+  return 2;
+}
+
+static int f_tostring (lua_State *L) {
+  LStream *p = tolstream(L);
+  if (isclosed(p))
+    lua_pushliteral(L, "file (closed)");
+  else
+    lua_pushfstring(L, "file (%p)", p->f);
+  return 1;
+}
+
+static int f_gc (lua_State *L) {
+  LStream *p = tolstream(L);
+  if (!isclosed(p) && p->f != NULL)
+    aux_close(L);  /* ignore closed and incompletely open files */
+  return 0;
+} 
+ 
+
+static void 
+createstdfile (lua_State *L, file_t *f, const char *k,
+                           const char *fname) {
+  LStream *p = newprefile(L);
+  p->f = f;
+  p->closef = &io_noclose;
+  if (k != NULL) {
+    lua_pushvalue(L, -1);
+    lua_setfield(L, LUA_REGISTRYINDEX, k);  /* add file to registry */
+  }
+  lua_setfield(L, -2, fname);  /* add file to module */
+}
+ 
+
 static int
 luaopen_kio(lua_State *L)
 {
@@ -322,6 +368,8 @@ luaopen_kio(lua_State *L)
 		{"close", io_close},
   		{"write", f_write},
 		{"read", f_read},
+		{"__gc", f_gc},
+		{"__tostring", f_tostring},
 		{NULL,  NULL}
 	};
  
@@ -338,6 +386,11 @@ luaopen_kio(lua_State *L)
 	};
 
 	luaL_newlib(L, io_lib);
+
+	//XXX in, our, err reference /dev/null
+ 	createstdfile(L, kfdopen(FD_STDIN), IO_INPUT, "stdin");
+  	createstdfile(L, kfdopen(FD_STDOUT), IO_OUTPUT, "stdout");
+  	createstdfile(L, kfdopen(FD_STDERR), NULL, "stderr");
 
 	return 1;
 }
