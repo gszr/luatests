@@ -116,6 +116,7 @@ luaopen_math(lua_State *L)
 	};
 
 	luaL_newlib(L, math_lib);
+	//XXX __builtin_huge_val()?
  	lua_pushnumber(L, (lua_Number)__builtin_huge_val());
  	lua_setfield(L, -2, "huge");
   	lua_pushinteger(L, LUA_MAXINTEGER);
