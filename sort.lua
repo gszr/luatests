@@ -38,9 +38,7 @@ assert(a==1 and x==nil)
 a,x = unpack({1,2}, 1, 1)
 assert(a==1 and x==nil)
 
--- XXX Kernel Lua: no math std lib
-if not _KERNEL then
-eval[[do
+do
   local maxI = math.maxinteger
   local minI = math.mininteger
   local maxi = (1 << 31) - 1          -- maximum value for an int (usually)
@@ -64,11 +62,13 @@ eval[[do
   a, b = unpack(t, maxI - 1, maxI); assert(a == 12 and b == 23)
   a, b = unpack(t, maxI, maxI); assert(a == 23 and b == nil)
   a, b = unpack(t, maxI, maxI - 1); assert(a == nil and b == nil)
-  t = {[minI] = 12.3, [minI + 1] = 23.5}
+-- XXX Kernel Lua: no floating-point tests
+if not _KERNEL then
+  eval[[t = {[minI] = 12.3, [minI + 1] = 23.5}
   a, b = unpack(t, minI, minI + 1); assert(a == 12.3 and b == 23.5)
   a, b = unpack(t, minI, minI); assert(a == 12.3 and b == nil)
-  a, b = unpack(t, minI + 1, minI); assert(a == nil and b == nil)
-end]]
+  a, b = unpack(t, minI + 1, minI); assert(a == nil and b == nil)]]
+end
 end
 
 do   -- length is not an integer
@@ -108,13 +108,10 @@ do
   a = table.move({10,20,30}, 1, 0, 3)   -- do not move
   eqT(a, {10,20,30})
 
-  -- XXX Kernel Lua: no math std lib
-  if not _KERNEL then
   local max = math.maxinteger
   a = table.move({[max - 2] = 1, [max - 1] = 2, [max] = 3},
         max - 2, max, -10, {})
   eqT(a, {[-10] = 1, [-9] = 2, [-8] = 3})
-  end
 
   a = setmetatable({}, {
         __index = function (_,k) return k * 10 end,
