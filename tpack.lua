@@ -14,7 +14,7 @@ local sizeint = packsize("i")
 local sizelong = packsize("l")
 local sizesize_t = packsize("T")
 local sizeLI = packsize("j")
--- XXX Kernel Lua
+-- XXX Kernel Lua: no float
 local sizefloat, sizedouble
 if not _KERNEL then
 sizefloat = packsize("f")
@@ -24,7 +24,7 @@ local sizenumber = packsize("n")
 local little = (pack("i2", 1) == "\1\0")
 local align = packsize("!xXi16")
 
--- XXX Kernel Lua
+-- XXX Kernel Lua: no float
 if not _KERNEL then
 assert(1 <= sizeshort and sizeshort <= sizeint and sizeint <= sizelong and
        sizefloat <= sizedouble)
@@ -33,7 +33,7 @@ assert(1 <= sizeshort and sizeshort <= sizeint and sizeint <= sizelong)
 end
 
 print("platform:")
--- XXX Kernel Lua
+-- XXX Kernel Lua: no float
 if not _KERNEL then
 print(string.format(
   "\tshort %d, int %d, long %d, size_t %d, float %d, double %d,\n\z
@@ -191,14 +191,11 @@ for i = 1, sizeLI - 1 do
 end
 
 -- Lua integer size
--- XXX Kernel Lua maxinteger, mininteger
-if not _KERNEL then
 assert(unpack(">j", pack(">j", math.maxinteger)) == math.maxinteger)
 assert(unpack("<j", pack("<j", math.mininteger)) == math.mininteger)
-end
 assert(unpack("<J", pack("<j", -1)) == -1)   -- maximum unsigned integer
 
--- XXX Kernel Lua
+-- XXX Kernel Lua: no float
 if not _KERNEL then
 if little then
   assert(pack("f", 24) == pack("<f", 24))
@@ -207,7 +204,7 @@ else
 end
 end
 
--- XXX Kernel Lua
+-- XXX Kernel Lua: no float
 if not _KERNEL then
 eval[[print "testing pack/unpack of floating-point numbers" 
 
@@ -231,6 +228,7 @@ end
 print "testing pack/unpack of strings"
 do
   local s = string.rep("abc", 1000)
+  --XXX Kernel Lua: precedence bug
   if not _KERNEL then
   assert(pack("zB", s, 247) == s .. "\0\xF7")
   else
@@ -273,7 +271,7 @@ end
 
 
 -- testing multiple types and sequence
--- XXX Kernel Lua
+-- XXX Kernel Lua: TODO think about it
 if not _KERNEL then
 do
   local x = pack("<b h b f d f n i", 1, 2, 3, 4, 5, 6, 7, 8)
@@ -289,6 +287,7 @@ do
   assert(pack(" < i1 i2 ", 2, 3) == "\2\3\0")   -- no alignment by default
   local x = pack(">!8 b Xh i4 i8 c1 Xi8", -12, 100, 200, "\xEC")
   assert(#x == packsize(">!8 b Xh i4 i8 c1 Xi8"))
+  --XXX Kernel Lua: precedence bug
   if not _KERNEL then
   assert(x == "\xf4" .. "\0\0\0" ..
               "\0\0\0\100" ..
@@ -309,7 +308,7 @@ do
   local a, b, c, d, e, f, g, pos = unpack(">!4 c3 c4 c2 z i4 c5 c2 Xh Xi4", x)
   assert(a == "abc" and b == "abcd" and c == "xz" and d == "hello" and
          e == 5 and f == "world" and g == "xy" and (pos - 1) % 4 == 0)
-  -- XXX Kernel Lua
+  -- XXX Kernel Lua: TODO think about it
   if not _KERNEL then
   x = pack(" b b Xd b Xb x", 1, 2, 3)
   assert(packsize(" b b Xd b Xb x") == 4)
