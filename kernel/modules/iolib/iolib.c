@@ -47,6 +47,16 @@ kfopen(const char *path, const char *mode, int *fd)
     return fp;
 }
 
+file_t*
+kfdopen(int fd)
+{
+	file_t *f;
+	if ((f = fd_getfile(fd)) != NULL)
+		fd_close(fd);
+
+	return f;
+}
+
 char
 kgetc(int fd)
 {
