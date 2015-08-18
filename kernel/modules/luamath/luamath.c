@@ -40,8 +40,8 @@ static int math_random (lua_State *L) {
   //XXX
   //luaL_argcheck(L, low >= 0 || up <= LUA_MAXINTEGER + low, 1,
   //                 "interval too large");
-  r *= (up - low) + 1;
-  lua_pushinteger(L, (lua_Integer)r + low);
+  r = r % (up - low) + low;
+  lua_pushinteger(L, (lua_Integer)r);
   return 1;
 }
 
@@ -87,6 +87,19 @@ static int math_min (lua_State *L) {
   return 1;
 } 
 
+static int math_max (lua_State *L) {
+  int n = lua_gettop(L);  /* number of arguments */
+  int imax = 1;  /* index of current maximum value */
+  int i;
+  luaL_argcheck(L, n >= 1, 1, "value expected");
+  for (i = 2; i <= n; i++) {
+    if (lua_compare(L, imax, i, LUA_OPLT))
+      imax = i;
+  }
+  lua_pushvalue(L, imax);
+  return 1;
+} 
+
 static int math_type (lua_State *L) {
   if (lua_type(L, 1) == LUA_TNUMBER) {
       if (lua_isinteger(L, 1))
@@ -111,6 +124,7 @@ luaopen_math(lua_State *L)
 		{"sin", math_sin},
 		{"cos", math_cos},
 		{"min", math_min},
+		{"max", math_max},
 		{"type", math_type},
 		{NULL, NULL}
 	};
