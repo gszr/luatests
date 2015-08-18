@@ -2,10 +2,7 @@
 
 print('testing strings and string library')
 
--- XXX Kernel Lua: no math std lib
-if not _KERNEL then
 local maxi, mini = math.maxinteger, math.mininteger
-end
 
 local function checkerror (msg, f, ...)
   local s, err = pcall(f, ...)
@@ -44,12 +41,9 @@ assert(string.sub("123456789",-10,-20) == "")
 assert(string.sub("123456789",-1) == "9")
 assert(string.sub("123456789",-4) == "6789")
 assert(string.sub("123456789",-6, -4) == "456")
--- XXX Kernel Lua: mini, maxi
-if not _KERNEL then
 assert(string.sub("123456789", mini, -4) == "123456")
 assert(string.sub("123456789", mini, maxi) == "123456789")
 assert(string.sub("123456789", mini, mini) == "")
-end
 assert(string.sub("\000123456789",3,5) == "234")
 assert(("\000123456789"):sub(8) == "789")
 
@@ -115,11 +109,8 @@ assert(string.rep('teste', 0, 'xuxu') == '')
 assert(string.rep('teste', 1, 'xuxu') == 'teste')
 assert(string.rep('\1\0\1', 2, '\0\0') == '\1\0\1\0\0\1\0\1')
 assert(string.rep('', 10, '.') == string.rep('.', 9))
--- XXX Kernel Lua: maxi, mini
-if not _KERNEL then
 assert(not pcall(string.rep, "aa", maxi // 2))
 assert(not pcall(string.rep, "", maxi // 2, "aa"))
-end
 
 assert(string.reverse"" == "")
 assert(string.reverse"\0\1\2\3" == "\3\2\1\0")
@@ -320,15 +311,12 @@ assert(table.concat(a, "b", 20, 20) == "xuxu")
 assert(table.concat(a, "", 20, 21) == "xuxuxuxu")
 assert(table.concat(a, "x", 22, 21) == "")
 assert(table.concat(a, "3", 299) == "xuxu3xuxu")
--- XXX Kernel Lua: maxi, mini
-if not _KERNEL then
 assert(table.concat({}, "x", maxi, maxi - 1) == "")
 assert(table.concat({}, "x", mini + 1, mini) == "")
 assert(table.concat({}, "x", maxi, mini) == "")
 assert(table.concat({[maxi] = "alo"}, "x", maxi, maxi) == "alo")
 assert(table.concat({[maxi] = "alo", [maxi - 1] = "y"}, "-", maxi - 1, maxi)
        == "y-alo")
-end
 
 assert(not pcall(table.concat, {"a", "b", {}}))
 
@@ -340,6 +328,7 @@ assert(table.concat(a, ",", 2) == "b,c")
 assert(table.concat(a, ",", 3) == "c")
 assert(table.concat(a, ",", 4) == "")
 
+--XXX Kernel Lua: os.setlocale not available
 if not _KERNEL then
 
 if not _port then
