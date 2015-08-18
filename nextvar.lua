@@ -312,12 +312,7 @@ end
 function table.maxn (t)
   local max = 0
   for k in pairs(t) do
-	-- XXX Kernel Lua TODO math.max
-	if not _KERNEL then
     max = (type(k) == 'number') and math.max(max, k) or max
-	else
-    max = (type(k) == 'number') and ((max > tonumber(k)) and max or tonumber(k)) or max
-	end
   end
   return max
 end
