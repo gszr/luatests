@@ -74,6 +74,33 @@ static int math_fmod (lua_State *L) {
   	return 1;
 } 
 
+static int math_min (lua_State *L) {
+  int n = lua_gettop(L);  /* number of arguments */
+  int imin = 1;  /* index of current minimum value */
+  int i;
+  luaL_argcheck(L, n >= 1, 1, "value expected");
+  for (i = 2; i <= n; i++) {
+    if (lua_compare(L, i, imin, LUA_OPLT))
+      imin = i;
+  }
+  lua_pushvalue(L, imin);
+  return 1;
+} 
+
+static int math_type (lua_State *L) {
+  if (lua_type(L, 1) == LUA_TNUMBER) {
+      if (lua_isinteger(L, 1))
+        lua_pushliteral(L, "integer"); 
+      else
+        lua_pushliteral(L, "float"); 
+  }
+  else {
+    luaL_checkany(L, 1);
+    lua_pushnil(L);
+  }
+  return 1;
+} 
+
 static int
 luaopen_math(lua_State *L)
 {
@@ -83,10 +110,18 @@ luaopen_math(lua_State *L)
 		{"fmod", math_fmod},
 		{"sin", math_sin},
 		{"cos", math_cos},
+		{"min", math_min},
+		{"type", math_type},
 		{NULL, NULL}
 	};
 
 	luaL_newlib(L, math_lib);
+ 	lua_pushnumber(L, (lua_Number)__builtin_huge_val());
+ 	lua_setfield(L, -2, "huge");
+  	lua_pushinteger(L, LUA_MAXINTEGER);
+  	lua_setfield(L, -2, "maxinteger");
+  	lua_pushinteger(L, LUA_MININTEGER);
+  	lua_setfield(L, -2, "mininteger");
 
 	return 1;
 }
