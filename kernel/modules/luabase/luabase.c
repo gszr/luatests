@@ -147,11 +147,36 @@ static int luaB_dofile (lua_State *L) {
   return dofilecont(L, 0, 0);
 } 
 
+static int load_aux (lua_State *L, int status, int envidx) {
+  if (status == LUA_OK) {
+    if (envidx != 0) {  /* 'env' parameter? */
+      lua_pushvalue(L, envidx);  /* environment for loaded function */
+      if (!lua_setupvalue(L, -2, 1))  /* set it as 1st upvalue */
+        lua_pop(L, 1);  /* remove 'env' if not used by previous call */
+    }
+    return 1;
+  }
+  else {  /* error (message is on top of the stack) */
+    lua_pushnil(L);
+    lua_insert(L, -2);  /* put before error message */
+    return 2;  /* return nil plus error message */
+  }
+}
+
+static int luaB_loadfile (lua_State *L) {
+  const char *fname = luaL_optstring(L, 1, NULL);
+  const char *mode = luaL_optstring(L, 2, NULL);
+  int env = (!lua_isnone(L, 3) ? 3 : 0);  /* 'env' index or 0 if no 'env' */
+  int status = luaL_loadfilex(L, fname, mode);
+  return load_aux(L, status, env);
+}
+
 static int
 luaopen_kbase(lua_State *L)
 {
 	const luaL_Reg base_lib[] = {
 		{"dofile", luaB_dofile},
+		{"loadfile", luaB_loadfile},
 		{NULL, NULL}
 	};
 
