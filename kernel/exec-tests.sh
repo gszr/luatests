@@ -20,7 +20,7 @@ luactl load $1 ./preload.lua;
 
 for i in `find . -name "*.lua" -maxdepth 1`; do
 	case $i in
-		*all.lua|*big.lua|*files.lua|*math.lua|*main.lua|*preload.lua) ;;
+		*all.lua|*big.lua|*files.lua|*math.lua|*main.lua) ;;
 		*) luactl load $1 $i;
 	esac
 done
