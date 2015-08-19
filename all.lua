@@ -146,7 +146,7 @@ local dofile = function (n, strip)
   if not _KERNEL then
   print(string.format("time: %g (+%g)", c - initclock, c - lastclock))
   else
-  print(string.format("time: %s (+%s)", tostring(c - initclock), tostring(c - lastclock)))
+  print(string.format("time: %sms (+%sms)", tostring((c - initclock)/1000), tostring((c - lastclock)/1000)))
   end
   lastclock = c
   report(n)
@@ -283,7 +283,7 @@ walltime = time() - walltime
 if not _KERNEL then
 print(format("\n\ntotal time: %.2fs (wall time: %ds)\n", clocktime, walltime))
 else
-print(format("\n\ntotal time: %ss (wall time: %ss)\n", tostring(clocktime), tostring(walltime)))
+print(format("\n\ntotal time: %ss (wall time: %ss)\n", tostring(clocktime/1000000), tostring(walltime)))
 end
 
 if not usertests then
