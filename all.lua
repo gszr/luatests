@@ -1,4 +1,5 @@
-#!../lua
+-- XXX Kernel Lua: reporting shebang as a syntax error
+--#!../lua
 -- $Id: all.lua,v 1.91 2014/12/26 17:20:53 roberto Exp $
 
 local version = "Lua 5.3"
@@ -8,6 +9,8 @@ if _VERSION ~= version then
   return
 end
 
+-- XXX Kernel Lua: globals are erased below
+local _KERNEL = _KERNEL
 
 -- next variables control the execution of some tests
 -- true means no test (so an undefined variable does not skip a test)
@@ -29,8 +32,12 @@ if usertests then
   _nomsg = true
 end
 
+-- XXX Kernel Lua: libs are loaded only once (see preload.lua)
+-- 				   to avoid the bug on require
+if not _KERNEL then
 -- tests should require debug when needed
 debug = nil
+end
 
 if usertests then
   T = nil    -- no "internal" tests for user tests
@@ -66,7 +73,10 @@ function Message (m)
   end
 end
 
+-- XXX Kernel Lua: no locale
+if not _KERNEL then
 assert(os.setlocale"C")
+end
 
 local T,print,format,write,assert,type,unpack,floor =
       T,print,string.format,io.write,assert,type,table.unpack,math.floor
@@ -74,8 +84,13 @@ local T,print,format,write,assert,type,unpack,floor =
 -- use K for 1000 and M for 1000000 (not 2^10 -- 2^20)
 local function F (m)
   local function round (m)
-    m = m + 0.04999
-    return format("%.1f", m)      -- keep one decimal digit
+    -- XXX Kernel Lua: no float
+	if not _KERNEL then
+	eval[[m = m + 0.04999
+    return format("%.1f", m)]]      -- keep one decimal digit
+	else
+	return m
+	end
   end
   if m < 1000 then return m
   else
@@ -101,9 +116,16 @@ else
     T.checkmemory()
     local total, numblocks, maxmem = T.totalmem()
     local count = collectgarbage("count")
+	-- XXX Kernel Lua: no float
+	if not _KERNEL then
     print(format(
       "\n    ---- total memory: %s (%.0fK), max use: %s,  blocks: %d\n",
       F(total), count, F(maxmem), numblocks))
+	else
+    print(format(
+      "\n    ---- total memory: %s (%sK), max use: %s,  blocks: %d\n",
+      F(total), count, F(maxmem), numblocks))
+	end
     print(format("\t(strings:  %d, tables: %d, functions: %d, "..
                  "\n\tudata: %d, threads: %d)",
                  T.totalmem"string", T.totalmem"table", T.totalmem"function",
@@ -120,7 +142,12 @@ local olddofile = dofile
 local dofile = function (n, strip)
   showmem()
   local c = os.clock()
+  -- XXX Kernel Lua: no float
+  if not _KERNEL then
   print(string.format("time: %g (+%g)", c - initclock, c - lastclock))
+  else
+  print(string.format("time: %s (+%s)", tostring(c - initclock), tostring(c - lastclock)))
+  end
   lastclock = c
   report(n)
   local f = assert(loadfile(n))
@@ -129,7 +156,10 @@ local dofile = function (n, strip)
   return f()
 end
 
+-- XXX Kernel Lua: main.lua assumes a shell
+if not _KERNEL then
 dofile('main.lua')
+end
 
 do
   local next, setmetatable, stderr = next, setmetatable, io.stderr
@@ -174,11 +204,17 @@ dofile('closure.lua')
 dofile('coroutine.lua')
 dofile('goto.lua', true)
 dofile('errors.lua')
+-- XXX Kernel Lua: math.lua not ported
+if not _KERNEL then
 dofile('math.lua')
+end
 dofile('sort.lua', true)
 dofile('bitwise.lua')
 assert(dofile('verybig.lua', true) == 10); collectgarbage()
+-- XXX Kernel Lua: files.lua not ported
+if not _KERNEL then
 dofile('files.lua')
+end
 
 if #msgs > 0 then
   print("\ntests not performed:")
@@ -189,7 +225,10 @@ if #msgs > 0 then
 end
 
 -- no test module should define 'debug'
+-- XXX Kernel Lua: debug was not erased (see note above)
+if not _KERNEL then
 assert(debug == nil)
+end
 
 local debug = require "debug"
 
@@ -240,16 +279,35 @@ collectgarbage();showmem()
 local clocktime = clock() - initclock
 walltime = time() - walltime
 
+-- XXX Kernel Lua: no float
+if not _KERNEL then
 print(format("\n\ntotal time: %.2fs (wall time: %ds)\n", clocktime, walltime))
+else
+print(format("\n\ntotal time: %ss (wall time: %ss)\n", tostring(clocktime), tostring(walltime)))
+end
 
 if not usertests then
   lasttime = lasttime or clocktime    -- if no last time, ignore difference
   -- check whether current test time differs more than 5% from last time
-  local diff = (clocktime - lasttime) / clocktime
-  local tolerance = 0.05    -- 5%
+  -- XXX Kernel Lua: no float
+  local diff, tolerance
+  if not _KERNEL then
+  eval[[diff = (clocktime - lasttime) / clocktime
+  tolerance = 0.05    -- 5%]]
+  else
+  diff = 100 - (lasttime * 100) / clocktime
+  tolerance = 5
+  end
+
   if (diff >= tolerance or diff <= -tolerance) then
+  -- XXX Kernel Lua: no float
+  if not _KERNEL then
     print(format("WARNING: time difference from previous test: %+.1f%%",
                   diff * 100))
+  else
+    print(format("WARNING: time difference from previous test: %s%%",
+                  tostring(diff)))
+  end
   end
   assert(open(fname, "w")):write(clocktime):close()
 end
