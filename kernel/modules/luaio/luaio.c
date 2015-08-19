@@ -301,11 +301,12 @@ static int f_read (lua_State *L) {
 static int io_open (lua_State *L) {
   const char *filename = luaL_checkstring(L, 1);
   const char *mode = luaL_optstring(L, 2, "r");
-  LStream *p = NULL;
+  LStream *p = newfile(L);
   const char *md = mode;  /* to traverse/check mode */
+  int fd;
   luaL_argcheck(L, l_checkmode(md), 2, "invalid mode");
-  //XXX p->f = fopen(filename, mode);
-  p = opencheck(L, filename, mode);
+  p->f = kfopen(filename, mode, &fd);
+  p->fd = fd;
   return (p->f == NULL) ? luaL_fileresult(L, 0, filename) : 1;
 }
  
