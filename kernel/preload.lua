@@ -8,6 +8,7 @@ math = require'math'
 base = require'base'
 
 dofile = base.dofile
+loadfile = base.loadfile
 _require = require
 
 function require (module)
@@ -36,6 +37,8 @@ end
 
 setfield("package.preload", {})
 setfield("package.loaded", {})
+
+package.path = "NO PATH"
 
 package.loaded.io = io
 package.loaded.os = os
