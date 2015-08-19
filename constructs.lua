@@ -141,8 +141,6 @@ assert(a == (n*(n+1))/2 and i==3);
 end
 assert(t[1] and t[n] and not t[0] and not t[n+1])
 
--- XXX Kernel Lua: no math std lib
-if not _KERNEL then
 function f(b)
   local x = 1;
   repeat
@@ -157,7 +155,6 @@ function f(b)
 end;
 
 assert(f(1) == 10 and f(2) == 20 and f(3) == 30 and f(4)==12)
-end
 
 local f = function (i)
   if i < 10 then return 'a'

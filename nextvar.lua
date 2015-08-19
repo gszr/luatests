@@ -42,10 +42,10 @@ if not T then
 else --[
 -- testing table sizes
 
-local function log2 (x) return math.log(x, 2) end
-
 -- XXX Kernel Lua: no expo operator and math lib
 if not _KERNEL then
+local function log2 (x) return math.log(x, 2) end
+
 eval[[local function mp2 (n)   -- minimum power of 2 >= n
   local mp = 2^math.ceil(log2(n))
   assert(n == 0 or (mp/2 < n and n <= mp))
@@ -265,8 +265,10 @@ do   -- clear global table
   for n,v in pairs(a) do
 	-- XXX Kernel Lua: put module tables in package.loaded
 	-- so they don't get erased
+	-- TODO Kernel Lua: move to preload.lua?
     if _KERNEL then
 		setfield('package.loaded', {})
+		package.loaded.io = io
 		package.loaded.os = os
 		package.loaded.math = math
 		package.loaded.string = string
@@ -324,6 +326,7 @@ if not _KERNEL then
 eval'assert(table.maxn{["1000"] = true, [24.5] = 3} == 24.5)'
 end
 assert(table.maxn{[1000] = true} == 1000)
+-- XXX Kernel Lua: TODO math.pi
 if not _KERNEL then
 assert(table.maxn{[10] = true, [100*math.pi] = print} == 100*math.pi)
 end
@@ -331,7 +334,7 @@ end
 table.maxn = nil
 
 -- int overflow
--- XXX Kernel Lua TODO use math.iexp
+-- XXX Kernel Lua: no expo operator
 if not _KERNEL then
 eval[[a = {}
 for i=0,50 do a[2^i] = true end
@@ -361,7 +364,7 @@ for k, v in pairs( t ) do
   assert(t[k] == nil)
 end
 
--- XXX Kernel Lua: number of items in t
+-- XXX Kernel Lua: number of items in t (see above)
 if not _KERNEL then
 assert(n == 5)
 else

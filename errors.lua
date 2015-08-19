@@ -394,9 +394,7 @@ if not _soft then
   local res, msg = xpcall(loop, function (m)
     assert(string.find(m, "stack overflow"))
     checkerr("error handling", loop)
-    if not _KERNEL then
     assert(math.sin(0) == 0)
-    end
     return 15
   end)
   assert(msg == 15)

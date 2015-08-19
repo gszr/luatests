@@ -1,15 +1,13 @@
 -- $Id: attrib.lua,v 1.61 2014/12/26 17:20:53 roberto Exp $
 
 -- XXX Kernel Lua: the following chunk depends on the package table
+-- TODO Kernel Lua: package table
 if not _KERNEL then
 
 print "testing require"
 
 assert(require"string" == string)
--- XXX Kernel Lua: math std lib is not available in Kernel Lua
-if not _KERNEL then
 assert(require"math" == math)
-end 
 assert(require"table" == table)
 assert(require"io" == io)
 assert(require"os" == os)
@@ -308,7 +306,7 @@ print('+')
 
 end  --]
 
-end
+end -- _KERNEL
 
 print("testing assignments, logical operators, and constructors")
 

@@ -468,6 +468,7 @@ _X = coroutine.wrap(function ()
 
 _X()
 
+-- XXX Kernel Lua: kernel panic, overflow
 if not _KERNEL then
 if not _soft then
   -- bug (stack overflow)

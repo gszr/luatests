@@ -6,10 +6,7 @@ local numbits = string.packsize('j') * 8
 
 assert(~0 == -1)
 
---XXX Kernel Lua: no math lib
-if not _KERNEL then
 assert((1 << (numbits - 1)) == math.mininteger)
-end
 
 -- basic tests for bitwise operators;
 -- use variables to avoid constant folding
@@ -122,6 +119,7 @@ assert(not pcall(function () return "0xffffffffffffffff\0" | 0 end))
 print'+'
 
 -- XXX Kernel Lua: creating package table
+-- TODO Kernel Lua: move to preload.lua?
 if _KERNEL then
 setfield('package.preload', {})
 end

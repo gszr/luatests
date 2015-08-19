@@ -33,13 +33,13 @@ local function foo ()
      241, 242, 243, 244, 245, 246, 247, 248,
      249, 250, 251, 252, 253, 254, 255, 256,
   }
-  -- XXX Kernel Lua
+  -- XXX Kernel Lua: no float
   if not _KERNEL then
   eval('assert(24.5 + 0.6 == 25.1)')
   end
   local t = {foo = function (self, x) return x + self.x end, x = 10}
   t.t = t
-  -- XXX Kernel Lua
+  -- XXX Kernel Lua: no float
   if not _KERNEL then
   eval[[assert(t:foo(1.5) == 11.5)')
   assert(t.t:foo(0.5) == 10.5)')   -- bug in 5.2 alpha
@@ -57,7 +57,7 @@ if _soft then return 10 end
 print "testing large programs (>64k)"
 
 -- template to create a very big test file
--- XXX Kernel Lua
+-- XXX Kernel Lua: no float
 if not _KERNEL then
 prog = [[$
 

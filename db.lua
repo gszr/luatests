@@ -106,10 +106,7 @@ repeat
   if 3<4 then a=1 else break end; f()
   while 1 do local x=10; break end; f()
   local b = 1
-  -- XXX Kernel Lua: no math std lib
-  if not _KERNEL then
   if 3>4 then return math.sin(1) end; f()
-  end
   a = 3<4; f()
   a = 3<4 or 1; f()
   repeat local x=20; if 4>3 then f() else break end; f() until 1
@@ -120,8 +117,6 @@ repeat
   assert(g(f) == 'a')
 until 1
 
--- XXX Kernel Lua: no math std lib
-if not _KERNEL then
 test([[if
 math.sin(1)
 then
@@ -130,7 +125,6 @@ else
   a=2
 end
 ]], {2,3,4,7})
-end
 
 test([[--
 if nil then
@@ -158,15 +152,12 @@ while a<=3 do
 end
 ]], {1,2,3,4,3,4,3,4,3,5})
   
--- XXX Kernel Lua: no math std lib
-if not _KERNEL then
 test([[while math.sin(1) do
   if math.sin(1)
   then break
   end
 end
 a=1]], {1,2,3,6})
-end
 
 test([[for i=1,3 do
   a=i
@@ -312,10 +303,7 @@ assert(debug.getinfo(1, "l").currentline == L+11)  -- check count of lines
 
 function g(...)
   local arg = {...}
-  -- XXX Kernel Lua: no math std lib
-  if not _KERNEL then
   do local a,b,c; a=math.sin(40); end
-  end
   local feijao
   local AAAA,B = "xuxu", "mamão"
   f(AAAA,B)

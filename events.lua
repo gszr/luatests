@@ -19,8 +19,9 @@ assert(B == 30)
 
 assert(getmetatable{} == nil)
 assert(getmetatable(4) == nil)
--- XXX Kernel Lua: assert passa na primeira execucao e falha nas seguintes
--- Nao eh bug; setmetatable(nil) eh executado nos testes
+-- XXX Kernel Lua
+-- There's a setmetatable(nil) in this file, so expect the assert below
+-- to fail if you run it more than one time in the same Lua state
 if not _KERNEL then
 assert(getmetatable(nil) == nil)
 end
@@ -151,7 +152,7 @@ assert(cap[0] == "div" and cap[1] == a and cap[2] == 0 and cap[3]==nil)
 end
 assert(a%2 == a)
 assert(cap[0] == "mod" and cap[1] == a and cap[2] == 2 and cap[3]==nil)
--- XXX Kernel Lua: teste abaixo nao passa
+-- XXX Kernel Lua: assert below fails
 if not _KERNEL then
 assert(a // (1/0) == a)
 assert(cap[0] == "idiv" and cap[1] == a and cap[2] == 1/0 and cap[3]==nil)
@@ -212,10 +213,7 @@ end
 t = setmetatable({1,2,3}, {__len = function () return 10 end})
 assert(#t == 10 and rawlen(t) == 3)
 assert(rawlen"abc" == 3)
--- XXX Kernel Lua TODO io lib
-if not _KERNEL then
 assert(not pcall(rawlen, io.stdin))
-end
 assert(not pcall(rawlen, 34))
 assert(not pcall(rawlen))
 
@@ -375,7 +373,7 @@ assert(x.val == "0abcdefg")
 c = {}
 local x
 setmetatable(c, {__concat = function (a,b)
-  -- XXX Kernel Lua: bug? type(b) retorna 'table'
+  -- XXX Kernel Lua: bug? type(b) returns 'table'
   if not _KERNEL then
   assert(type(a) == "number" and b == c or type(b) == "number" and a == c)
   end
