@@ -118,12 +118,6 @@ assert(not pcall(function () return "0xffffffffffffffff\0" | 0 end))
 
 print'+'
 
--- XXX Kernel Lua: creating package table
--- TODO Kernel Lua: move to preload.lua?
-if _KERNEL then
-setfield('package.preload', {})
-end
-
 package.preload.bit32 = function ()     --{
 
 -- no built-in 'bit32' library: implement it using bitwise operators

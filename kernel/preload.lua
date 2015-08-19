@@ -8,7 +8,6 @@ math = require'math'
 base = require'base'
 
 dofile = base.dofile
-
 _require = require
 
 function require (module)
@@ -19,6 +18,8 @@ function eval (chunk)
 	return load(chunk)() 
 end
 
+
+--------------------------------------------------------
 -- taken from http://www.lua.org/pil/14.1.html
 function setfield (f, v)
 	local t = _G    -- start with the table of globals
@@ -31,3 +32,18 @@ function setfield (f, v)
 		end
 	end
 end
+--------------------------------------------------------
+
+setfield("package.preload", {})
+setfield("package.loaded", {})
+
+package.loaded.io = io
+package.loaded.os = os
+package.loaded.math = math
+package.loaded.string = string
+package.loaded.table = table
+package.loaded.debug = debug
+package.loaded.coroutine = coroutine
+package.loaded.utf8 = utf8
+package.loaded._G = _G
+package.loaded.package = package

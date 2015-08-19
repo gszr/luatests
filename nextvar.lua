@@ -263,20 +263,6 @@ do   -- clear global table
   local a = {}
   for n,v in pairs(_G) do a[n]=v end
   for n,v in pairs(a) do
-	-- XXX Kernel Lua: put module tables in package.loaded
-	-- so they don't get erased
-	-- TODO Kernel Lua: move to preload.lua?
-    if _KERNEL then
-		setfield('package.loaded', {})
-		package.loaded.io = io
-		package.loaded.os = os
-		package.loaded.math = math
-		package.loaded.string = string
-		package.loaded.table = table
-		package.loaded.debug = debug
-		package.loaded.coroutine = coroutine
-		package.loaded.utf8 = utf8
-	end
 	if not package.loaded[n] and (type(v) ~= "function") and
        not string.find(n, "^[%u_]") then
      _G[n] = nil
