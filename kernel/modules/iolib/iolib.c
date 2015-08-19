@@ -34,7 +34,7 @@ kfopen(const char *path, const char *mode, int *fd)
 	if (*mode == 'r')
 		omode = FREAD;
 	else if (*mode == 'w')
-		omode = FWRITE;
+		omode = FWRITE | O_CREAT;
 	else
 		return NULL;
 
