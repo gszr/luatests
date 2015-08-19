@@ -1,6 +1,7 @@
 /* Lua OS module */
 
 #include <sys/time.h>
+#include <sys/proc.h>
 #include <sys/lua.h>
 #ifdef _MODULE
 #include <sys/module.h>
@@ -61,18 +62,17 @@ os_time (lua_State *L) {
 } 
 
 static int
-os_utime(lua_State *L)
-{
-	struct timeval tv;
-	microtime(&tv);
-	lua_pushinteger(L, tv.tv_usec);
-	return 1;
-}
-
-static int
 os_clock(lua_State *L)
 {
-	return os_utime(L);
+	struct rusage ru;
+	long s;
+
+	getrusage1(curlwp->l_proc, RUSAGE_SELF, &ru);
+	s = ru.ru_utime.tv_sec * 1000000 + ru.ru_stime.tv_sec * 1000000
+		+ ru.ru_utime.tv_usec + ru.ru_stime.tv_usec;
+	lua_pushinteger(L, s);
+
+	return 1;
 }
 
 static int
