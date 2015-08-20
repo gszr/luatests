@@ -10,12 +10,16 @@
 #include "lprefix.h"
 
 
+#ifndef _KERNEL
 #include <limits.h>
 #include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#else
+#include <sys/proc.h>
+#include <sys/malloc.h>
+#endif
 #include "lua.h"
 
 #include "lapi.h"
@@ -32,6 +36,27 @@
 #include "ltable.h"
 #include "lualib.h"
 
+
+#ifdef _KERNEL
+
+#define EXIT_FAILURE            1
+
+#define fprintf(fd, fmt, ...)   printf(fmt, __VA_ARGS__)
+#define exit(c)                 exit1(curlwp, c)
+
+#undef malloc
+#define malloc(s)               kern_malloc(s, M_WAITOK | M_ZERO)
+#undef free
+#define free(p)                 kern_free(p)
+
+#define jmp_buf                 label_t
+#define setjmp(b)               setjmp(&(b))
+#define longjmp(b, r)           longjmp(&(b))
+
+#define getenv(s)               NULL
+#define atexit(x)               ;
+
+#endif
 
 
 /*
@@ -809,6 +834,7 @@ static int doonnewstack (lua_State *L) {
 }
 
 
+#ifndef _KERNEL
 static int s2d (lua_State *L) {
   lua_pushnumber(L, *cast(const double *, luaL_checkstring(L, 1)));
   return 1;
@@ -820,6 +846,7 @@ static int d2s (lua_State *L) {
   lua_pushlstring(L, cast(char *, &d), sizeof(d));
   return 1;
 }
+#endif
 
 
 static int num2int (lua_State *L) {
@@ -851,24 +878,30 @@ static lua_State *getstate (lua_State *L) {
 
 static int loadlib (lua_State *L) {
   static const luaL_Reg libs[] = {
+#ifndef _KERNEL
     {"_G", luaopen_base},
+#endif
     {"coroutine", luaopen_coroutine},
     {"debug", luaopen_debug},
+#ifndef _KERNEL
     {"io", luaopen_io},
     {"os", luaopen_os},
     {"math", luaopen_math},
+#endif
     {"string", luaopen_string},
     {"table", luaopen_table},
     {NULL, NULL}
   };
   lua_State *L1 = getstate(L);
   int i;
+#ifndef _KERNEL
   luaL_requiref(L1, "package", luaopen_package, 0);
   lua_assert(lua_type(L1, -1) == LUA_TTABLE);
   /* 'requiref' should not reload module already loaded... */
   luaL_requiref(L1, "package", NULL, 1);  /* seg. fault if it reloads */
   /* ...but should return the same module */
   lua_assert(lua_compare(L1, -1, -2, LUA_OPEQ));
+#endif
   luaL_getsubtable(L1, LUA_REGISTRYINDEX, "_PRELOAD");
   for (i = 0; libs[i].name; i++) {
     lua_pushcfunction(L1, libs[i].func);
@@ -1179,9 +1212,11 @@ static int runC (lua_State *L, lua_State *L1, const char *pc) {
     else if EQ("Llen") {
       lua_pushinteger(L1, luaL_len(L1, getindex));
     }
+#ifndef _KERNEL
     else if EQ("loadfile") {
       luaL_loadfile(L1, luaL_checkstring(L1, getnum));
     }
+#endif
     else if EQ("loadstring") {
       const char *s = luaL_checkstring(L1, getnum);
       luaL_loadstring(L1, s);
@@ -1500,7 +1535,9 @@ static int coresume (lua_State *L) {
 static const struct luaL_Reg tests_funcs[] = {
   {"checkmemory", lua_checkmemory},
   {"closestate", closestate},
+#ifndef _KERNEL
   {"d2s", d2s},
+#endif
   {"doonnewstack", doonnewstack},
   {"doremote", doremote},
   {"gccolor", gc_color},
@@ -1522,7 +1559,9 @@ static const struct luaL_Reg tests_funcs[] = {
   {"querytab", table_query},
   {"ref", tref},
   {"resume", coresume},
+#ifndef _KERNEL
   {"s2d", s2d},
+#endif
   {"sethook", sethook},
   {"stacklevel", stacklevel},
   {"testC", testC},

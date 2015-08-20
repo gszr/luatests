@@ -8,7 +8,11 @@
 #define ltests_h
 
 
+#ifndef _KERNEL
 #include <stdlib.h>
+#else
+#include <lib/libkern/libkern.h>
+#endif
 
 /* test Lua with no compatibility code */
 #undef LUA_COMPAT_MATHLIB
@@ -29,7 +33,9 @@
 
 /* turn on assertions */
 #undef NDEBUG
+#ifndef _KERNEL
 #include <assert.h>
+#endif
 #define lua_assert(c)           assert(c)
 
 
