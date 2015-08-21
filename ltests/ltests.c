@@ -878,9 +878,7 @@ static lua_State *getstate (lua_State *L) {
 
 static int loadlib (lua_State *L) {
   static const luaL_Reg libs[] = {
-#ifndef _KERNEL
     {"_G", luaopen_base},
-#endif
     {"coroutine", luaopen_coroutine},
     {"debug", luaopen_debug},
 #ifndef _KERNEL
@@ -892,21 +890,21 @@ static int loadlib (lua_State *L) {
     {"table", luaopen_table},
     {NULL, NULL}
   };
+#ifndef _KERNEL
   lua_State *L1 = getstate(L);
   int i;
-#ifndef _KERNEL
   luaL_requiref(L1, "package", luaopen_package, 0);
   lua_assert(lua_type(L1, -1) == LUA_TTABLE);
   /* 'requiref' should not reload module already loaded... */
   luaL_requiref(L1, "package", NULL, 1);  /* seg. fault if it reloads */
   /* ...but should return the same module */
   lua_assert(lua_compare(L1, -1, -2, LUA_OPEQ));
-#endif
   luaL_getsubtable(L1, LUA_REGISTRYINDEX, "_PRELOAD");
   for (i = 0; libs[i].name; i++) {
     lua_pushcfunction(L1, libs[i].func);
     lua_setfield(L1, -2, libs[i].name);
   }
+#endif
   return 0;
 }
 
