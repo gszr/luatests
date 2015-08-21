@@ -12,4 +12,10 @@ SRCS+=		iolib.c
 CPPFLAGS+=	-I${S}/../external/mit/lua/dist/src \
 		-I${S}/sys
 
+.if make(tests) 
+CPPFLAGS+=  -DLUA_USER_H='"ltests.h"'
+.endif
+
+tests:		all
+
 .include <bsd.kmodule.mk>
