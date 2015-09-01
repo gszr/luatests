@@ -1,3 +1,7 @@
+/*
+ * See copyright notice in LICENSE
+ */
+
 /* Lua OS module */
 
 #include <sys/lua.h>

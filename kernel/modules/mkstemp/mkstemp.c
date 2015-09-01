@@ -1,3 +1,7 @@
+/*
+ * See copyright notice in LICENSE
+ */
+
 #include <sys/filedesc.h>
 #include <sys/stat.h>
 #include <sys/fcntl.h>

@@ -1,0 +1,80 @@
+
+LICENSE NOTICES
+---------------
+
+- kernel/modules/iolib/iolib.c
+
+  * kread, dofileread_, kwrite, dofilewrite_ were adapted from the NetBSD
+    project [1]. The code is licensed as follows:
+
+    Modified: Copyright (c) 2015 Guilherme Salazar <GmeSalazar@Gmail.Com>
+    Original: Copyright (c) 2007, 2008, 2009 The NetBSD Foundation, Inc.
+    All rights reserved.
+
+    This code is derived from software contributed to The NetBSD Foundation
+    by Andrew Doran.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions
+    are met:
+    1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+    2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+
+    THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+    ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+    TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+    PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
+    BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+    POSSIBILITY OF SUCH DAMAGE.
+
+- kernel/modules/mkstemp/mkstemp.c
+
+  * mkstemp function was obtained (and modified) from the 4.3BSD source [2]
+    The code is licensed as follows:
+
+    Modified: Copyright (c) 2015 Guilherme Salazar <GmeSalazar@Gmail.Com>
+    Original: Copyright (c) 1983 Regents of the University of California.
+    All rights reserved.  The Berkeley software License Agreement
+    specifies the terms and conditions for redistribution.
+
+- kernel/modules/
+  luabase/luabase.c, luaio/luaio.c, luamath/luamath.c, luaos/luaos.c
+
+  Code for these libraries were adapted from the Lua codebase, which can be
+  found at [3] and are licensed as stated below.
+
+  Modified: Copyright (c) 2015 Guilherme Salazar <GmeSalazar@Gmail.Com>
+  Original: Copyright (c) 1994–2015 Lua.org, PUC-Rio.
+  Permission is hereby granted, free of charge, to any person obtaining a
+  copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation
+  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the 
+  Software is furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+  THE SOFTWARE.
+
+
+-------
+
+[1] Original code is under 'sys/kern/sys_generic.c'
+[2] "Walter's Retro Computing Corner Documentation",
+    Retrieved from http://www.retro11.de/ouxr/43bsd/usr/src/lib/libc/gen/mkstemp.c.html
+[3] http://www.lua.org/download.html
