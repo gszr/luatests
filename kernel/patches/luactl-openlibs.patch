@@ -1,0 +1,150 @@
+Index: sbin/luactl/luactl.8
+===================================================================
+RCS file: /cvsroot/src/sbin/luactl/luactl.8,v
+retrieving revision 1.4
+diff -u -r1.4 luactl.8
+--- sbin/luactl/luactl.8	17 Oct 2013 09:44:22 -0000	1.4
++++ sbin/luactl/luactl.8	9 Sep 2015 18:19:27 -0000
+@@ -40,6 +40,10 @@
+ .Op Fl cq
+ .Cm require
+ .Ar name module
++.Nm
++.Op Fl cq
++.Cm openlibs
++.Ar name
+ .Sh DESCRIPTION
+ The
+ .Nm
+@@ -103,6 +107,9 @@
+ This is the equivalent of userland Lua code calling the
+ .Sq require
+ function.
++.It Cm openlibs Ar name
++Load Lua standard libraries into the Lua state
++.Ar name .
+ .El
+ .Sh FILES
+ .Bl -tag -width "/dev/lua" -compact
+Index: sbin/luactl/luactl.c
+===================================================================
+RCS file: /cvsroot/src/sbin/luactl/luactl.c,v
+retrieving revision 1.2
+diff -u -r1.2 luactl.c
+--- sbin/luactl/luactl.c	29 Oct 2013 16:11:15 -0000	1.2
++++ sbin/luactl/luactl.c	9 Sep 2015 18:19:27 -0000
+@@ -58,6 +58,8 @@
+ static void require(char *, char *);
+ static void load(char *, char *);
+ 
++static void openlibs(char *);
++
+ static void usage(void) __dead;
+ 
+ #define _PATH_DEV_LUA	"/dev/lua"
+@@ -110,6 +112,12 @@
+ 		if (docreate)
+ 			create(argv[1], NULL);
+ 		load(argv[1], argv[2]);
++	} else if (!strcmp(argv[0], "openlibs")) {
++		if (argc != 2)
++			usage();
++		if (docreate)
++			create(argv[1], NULL);
++        openlibs(argv[1]);
+ 	} else
+ 		usage();
+ 
+@@ -198,6 +206,22 @@
+ }
+ 
+ static void
++openlibs(char *name)
++{
++	struct lua_require o;
++
++	strlcpy(o.state, name, sizeof(o.state));
++
++	if (ioctl(devfd, LUAOPENLIBS, &o) == -1)
++		err(EXIT_FAILURE, "LUAOPENLIBS");
++
++	if (quiet)
++		return;
++
++	printf("standard libraries opened by %s\n", name);
++}
++
++static void
+ load(char *name, char *path)
+ {
+ 	struct lua_load l;
+@@ -225,6 +249,7 @@
+ 	fprintf(stderr, "       %s [-cq] destroy name\n", p);
+ 	fprintf(stderr, "       %s [-cq] require name module\n", p);
+ 	fprintf(stderr, "       %s [-cq] load name path\n", p);
++	fprintf(stderr, "       %s [-cq] openlibs name\n", p);
+ 
+ 	exit(EXIT_FAILURE);
+ }
+Index: sys/modules/lua/lua.c
+===================================================================
+RCS file: /cvsroot/src/sys/modules/lua/lua.c,v
+retrieving revision 1.16
+diff -u -r1.16 lua.c
+--- sys/modules/lua/lua.c	7 Feb 2015 04:09:13 -0000	1.16
++++ sys/modules/lua/lua.c	9 Sep 2015 18:19:28 -0000
+@@ -49,6 +49,7 @@
+ #include <sys/cpu.h>
+ 
+ #include <lauxlib.h>
++#include <lualib.h>
+ 
+ #include "luavar.h"
+ 
+@@ -279,6 +280,7 @@
+ 	struct lua_info *info;
+ 	struct lua_create *create;
+ 	struct lua_require *require;
++	struct lua_require *openlibs;
+ 	struct lua_load *load;
+ 	struct lua_state *s;
+ 	struct lua_module *m;
+@@ -380,6 +382,22 @@
+ 					    	return 0;
+ 					}
+ 		return ENXIO;
++    case LUAOPENLIBS:
++		openlibs = data;
++		LIST_FOREACH(s, &lua_states, lua_next)
++			if (!strcmp(s->lua_name, openlibs->state)) {
++				if (lua_verbose)
++					device_printf(
++						sc->sc_dev,
++					    "opening standard libraries "
++					    "to state %s\n",
++					    s->lua_name);
++				klua_lock(s->K);
++                luaL_openlibs(s->K->L);
++				klua_unlock(s->K);
++				return 0;
++			}
++		return ENXIO;
+ 	case LUALOAD:
+ 		load = data;
+ 		if (strrchr(load->path, '/') == NULL)
+Index: sys/sys/lua.h
+===================================================================
+RCS file: /cvsroot/src/sys/sys/lua.h,v
+retrieving revision 1.7
+diff -u -r1.7 lua.h
+--- sys/sys/lua.h	30 Nov 2014 19:12:59 -0000	1.7
++++ sys/sys/lua.h	9 Sep 2015 18:19:28 -0000
+@@ -81,6 +81,8 @@
+ /* loading Lua code into a Lua state */
+ #define LUALOAD		_IOWR('l', 4, struct lua_load)
+ 
++#define LUAOPENLIBS	_IOWR('1', 5, struct lua_require)
++
+ #ifdef _KERNEL
+ extern int klua_mod_register(const char *, lua_CFunction);
+ extern int klua_mod_unregister(const char *);

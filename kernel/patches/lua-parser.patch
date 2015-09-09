@@ -2,8 +2,16 @@ Index: external/mit/lua/dist/src/lparser.c
 ===================================================================
 RCS file: /cvsroot/src/external/mit/lua/dist/src/lparser.c,v
 retrieving revision 1.3
-diff -r1.3 lparser.c
-1034a1035
-> #ifndef _KERNEL
-1035a1037
-> #endif
+diff -u -r1.3 lparser.c
+--- external/mit/lua/dist/src/lparser.c	2 Feb 2015 14:03:05 -0000	1.3
++++ external/mit/lua/dist/src/lparser.c	9 Sep 2015 18:08:23 -0000
+@@ -1032,7 +1032,9 @@
+ } priority[] = {  /* ORDER OPR */
+    {10, 10}, {10, 10},           /* '+' '-' */
+    {11, 11}, {11, 11},           /* '*' '%' */
++#ifndef _KERNEL
+    {14, 13},                  /* '^' (right associative) */
++#endif
+    {11, 11}, {11, 11},           /* '/' '//' */
+    {6, 6}, {4, 4}, {5, 5},   /* '&' '|' '~' */
+    {7, 7}, {7, 7},           /* '<<' '>>' */
