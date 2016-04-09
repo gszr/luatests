@@ -137,6 +137,7 @@ assert(b('get') == 'xuxu')
 b('set', 10); assert(b('get') == 14)
 
 
+_USPACE[[
 local w
 -- testing multi-level closure
 function f(x)
@@ -148,7 +149,20 @@ end
 y = f(10)
 w = 1.345
 assert(y(20)(30) == 60+w)
+]]
+_KSPACE[[
+local w
+-- testing multi-level closure
+function f(x)
+  return function (y)
+    return function (z) return w+x+y+z end
+  end
+end
 
+y = f(10)
+w = 1
+assert(y(20)(30) == 60+w)
+]]
 -- testing closures x repeat-until
 
 local a = {}

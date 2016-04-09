@@ -63,10 +63,18 @@ do
   a, b = unpack(t, maxI - 1, maxI); assert(a == 12 and b == 23)
   a, b = unpack(t, maxI, maxI); assert(a == 23 and b == nil)
   a, b = unpack(t, maxI, maxI - 1); assert(a == nil and b == nil)
+_USPACE[[
   t = {[minI] = 12.3, [minI + 1] = 23.5}
   a, b = unpack(t, minI, minI + 1); assert(a == 12.3 and b == 23.5)
   a, b = unpack(t, minI, minI); assert(a == 12.3 and b == nil)
   a, b = unpack(t, minI + 1, minI); assert(a == nil and b == nil)
+]]
+_KSPACE[[
+  t = {[minI] = 12, [minI + 1] = 23}
+  a, b = unpack(t, minI, minI + 1); assert(a == 12 and b == 23)
+  a, b = unpack(t, minI, minI); assert(a == 12 and b == nil)
+  a, b = unpack(t, minI + 1, minI); assert(a == nil and b == nil)
+]]
 end
 
 do   -- length is not an integer
@@ -245,7 +253,12 @@ function timesort (a, n, func, msg, pre)
   table.sort(a, func)
   x = (os.clock() - x) * 1000
   pre = pre or ""
+_USPACE[[
   print(string.format("%ssorting %d %s elements in %.2f msec.", pre, n, msg, x))
+]]
+_KSPACE[[
+  print(string.format("%ssorting %d %s elements in %d msec.", pre, n, msg, x / 1000))
+]]
   check(a, func)
 end
 
@@ -269,8 +282,14 @@ end
 x = os.clock(); i=0
 table.sort(a, function(x,y) i=i+1; return y<x end)
 x = (os.clock() - x) * 1000
+_USPACE[[
 print(string.format("Invert-sorting other %d elements in %.2f msec., with %i comparisons",
       limit, x, i))
+]]
+_KSPACE[[
+print(string.format("Invert-sorting other %d elements in %d msec., with %i comparisons",
+      limit, x / 1000, i))
+]]
 check(a, function(x,y) return y<x end)
 
 

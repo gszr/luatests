@@ -435,9 +435,19 @@ debug.sethook(function (e) a=a+1 end, "", 4000)
 a=0; for i=1,1000 do end; assert(a == 0)
 
 do
+_USPACE[[
   debug.sethook(print, "", 2^24 - 1)   -- count upperbound
+]]
+_KSPACE[[
+  debug.sethook(print, "", exp(2, 24) - 1)   -- count upperbound
+]]
   local f,m,c = debug.gethook()
+_USPACE[[
   assert(({debug.gethook()})[3] == 2^24 - 1)
+]]
+_KSPACE[[
+  assert(({debug.gethook()})[3] == exp(2, 24) - 1)
+]]
 end
 
 debug.sethook()
@@ -698,8 +708,15 @@ setmetatable(a, {
 
 local b = setmetatable({}, getmetatable(a))
 
+_USPACE[[
 assert(a[3] == "__index" and a^3 == "__pow" and a..a == "__concat")
+]]
+_USPACE[[
 assert(a/3 == "__div" and 3%a == "__mod")
+]]
+_KSPACE[[
+assert(a/3 == "__idiv" and 3%a == "__mod")
+]]
 assert(a+3 == "__add" and 3-a == "__sub" and a*3 == "__mul" and
        -a == "__unm" and #a == "__len" and a&3 == "__band")
 assert(a|3 == "__bor" and 3~a == "__bxor" and a<<3 == "__shl" and

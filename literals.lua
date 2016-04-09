@@ -261,6 +261,7 @@ end
 
 
 -- testing decimal point locale
+_USPACE[[
 if os.setlocale("pt_BR") or os.setlocale("ptb") then
   assert(not load("a = (3,4)"))
   assert(tonumber("3,4") == 3.4 and tonumber"3.4" == nil)
@@ -275,6 +276,7 @@ else
   (Message or print)(
    '\n >>> pt_BR locale not available: skipping decimal point tests <<<\n')
 end
+]]
 
 
 -- testing %q x line ends

@@ -49,7 +49,9 @@ assert(doit("error()") == nil)
 
 -- test common errors/errors that crashed in the past
 assert(doit("table.unpack({}, 1, n=2^30)"))
+_USPACE[[
 assert(doit("a=math.sin()"))
+]]
 assert(not doit("tostring(1)") and doit("tostring()"))
 assert(doit"tonumber()")
 assert(doit"repeat until 1; a")
@@ -116,6 +118,7 @@ checkmessage("print('10' < 10)", "string with number")
 checkmessage("print(10 < '23')", "number with string")
 
 -- float->integer conversions
+_USPACE[[
 checkmessage("local a = 2.0^100; x = a << 2", "local a")
 checkmessage("local a = 1 >> 2.0^100", "has no integer representation")
 checkmessage("local a = '10' << 2.0^100", "has no integer representation")
@@ -130,6 +133,7 @@ checkmessage("return 34 << 7e30", "has no integer representation")
 checkmessage("return ~-3e40", "has no integer representation")
 checkmessage("return ~-3.009", "has no integer representation")
 checkmessage("return 3.009 & 1", "has no integer representation")
+]]
 checkmessage("return 34 >> {}", "table value")
 checkmessage("a = 24 // 0", "divide by zero")
 checkmessage("a = 1 % 0", "'n%0'")
@@ -145,7 +149,9 @@ checkmessage([[
 _G.D = nil
 
 do   -- named userdata
+_USPACE[[
   checkmessage("math.sin(io.input())", "(number expected, got FILE*)")
+]]
   _ENV.XX = setmetatable({}, {__name = "My Type"})
   checkmessage("io.input(XX)", "(FILE* expected, got My Type)")
   _ENV.XX = nil
@@ -441,7 +447,9 @@ assert(not a and type(b) == "table" and c == nil)
 
 print("testing tokens in error messages")
 checksyntax("syntax error", "", "error", 1)
+_USPACE[[
 checksyntax("1.000", "", "1.000", 1)
+]]
 checksyntax("[[a]]", "", "[[a]]", 1)
 checksyntax("'aa'", "", "'aa'", 1)
 checksyntax("while << do end", "", "<<", 1)
@@ -486,7 +494,9 @@ testrep("", "while a do ", "", " end")
 testrep("local a; ", "if a then else ", "", " end")
 testrep("", "function foo () ", "", " end")
 testrep("local a; a=", "a..", "a", "")
+_USPACE[[
 testrep("local a; a=", "a^", "a", "")
+]]
 
 checkmessage("a = f(x" .. string.rep(",x", 260) .. ")", "too many registers")
 

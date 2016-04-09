@@ -20,7 +20,12 @@ assert(a >> 4 == ~a)
 a = 0xF0; b = 0xCC; c = 0xAA; d = 0xFD
 assert(a | b ~ c & d == 0xF4)
 
+_USPACE[[
 a = 0xF0.0; b = 0xCC.0; c = "0xAA.0"; d = "0xFD.0"
+]]
+_KSPACE[[
+a = 0xF0; b = 0xCC; c = "0xAA"; d = "0xFD"
+]]
 assert(a | b ~ c & d == 0xF4)
 
 a = 0xF0000000; b = 0xCC000000;
@@ -42,8 +47,14 @@ assert(-1 >> numbits == 0 and
        -1 << numbits == 0 and
        -1 << -numbits == 0)
 
+_USPACE[[
 assert((2^30 - 1) << 2^30 == 0)
 assert((2^30 - 1) >> 2^30 == 0)
+]]
+_KSPACE[[
+assert(exp(2, 30) - 1 << 2^30 == 0)
+assert(exp(2, 30) - 1 >> 2^30 == 0)
+]]
 
 assert(1 >> -3 == 1 << 3 and 1000 >> 5 == 1000 << -5)
 
@@ -270,6 +281,7 @@ for _, b in pairs(c) do
 end
 
 -- for this test, use at most 24 bits (mantissa of a single float)
+_USPACE[[
 c = {0, 1, 2, 3, 10, 0x800000, 0xaaaaaa, 0x555555, 0xffffff, 0x7fffff}
 for _, b in pairs(c) do
   for i = -40, 40 do
@@ -278,6 +290,7 @@ for _, b in pairs(c) do
     assert(math.fmod(x - y, 2.0^32) == 0)
   end
 end
+]]
 
 assert(not pcall(bit32.band, {}))
 assert(not pcall(bit32.bnot, "a"))
@@ -304,14 +317,21 @@ assert(not pcall(bit32.extract, 0, 31, 2))
 
 assert(bit32.replace(0x12345678, 5, 28, 4) == 0x52345678)
 assert(bit32.replace(0x12345678, 0x87654321, 0, 32) == 0x87654321)
+_USPACE[[
 assert(bit32.replace(0, 1, 2) == 2^2)
 assert(bit32.replace(0, -1, 4) == 2^4)
+]]
+_KSPACE[[
+assert(bit32.replace(0, 1, 2) == exp(2, 2))
+assert(bit32.replace(0, -1, 4) == exp(2, 4))
+]]
 assert(bit32.replace(-1, 0, 31) == (1 << 31) - 1)
 assert(bit32.replace(-1, 0, 1, 2) == (1 << 32) - 7)
 
 
 -- testing conversion of floats
 
+_USPACE[[
 assert(bit32.bor(3.0) == 3)
 assert(bit32.bor(-4.0) == 0xfffffffc)
 
@@ -322,6 +342,7 @@ if 2.0^50 < 2.0^50 + 1.0 and 2.0^50 < (-1 >> 1) then
   assert(bit32.bor(2.0^48 - 5.0) == 0xfffffffb)
   assert(bit32.bor(-2.0^48 - 6.0) == 0xfffffffa)
 end
+]]
 
 print'OK'
 

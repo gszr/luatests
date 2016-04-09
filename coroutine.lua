@@ -214,7 +214,12 @@ local a = 0
 for t in coroutine.wrap(function () all({}, 5, 4) end) do
   a = a+1
 end
+_USPACE[[
 assert(a == 5^4)
+]]
+_KSPACE[[
+assert(a == exp(5, 4))
+]]
 
 
 -- access to locals of collected corroutines
@@ -501,6 +506,7 @@ _X()
 
 if not _soft then
   -- bug (stack overflow)
+_USPACE[[
   local j = 2^9
   local lim = 1000000    -- (C stack limit; assume 32-bit machine)
   local t = {lim - 10, lim - 5, lim - 1, lim, lim + 1}
@@ -514,6 +520,22 @@ if not _soft then
     local r, msg = coroutine.resume(co)
     assert(not r)
   end
+]]
+_KSPACE[[
+  local j = 512
+  local lim = 1000000    -- (C stack limit; assume 32-bit machine)
+  local t = {lim - 10, lim - 5, lim - 1, lim, lim + 1}
+  for i = 1, #t do
+    local j = t[i]
+    co = coroutine.create(function()
+           local t = {}
+           for i = 1, j do t[i] = i end
+           return table.unpack(t)
+         end)
+    local r, msg = coroutine.resume(co)
+    assert(not r)
+  end
+]]
   co = nil
 end
 

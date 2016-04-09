@@ -1,5 +1,8 @@
 -- $Id: attrib.lua,v 1.63 2015/10/08 15:57:22 roberto Exp $
 
+-- XXX Kernel Lua: require implementation differs from userspace Lua
+-- 'package' table is not available in kernel space
+_USPACE[=[
 print "testing require"
 
 assert(require"string" == string)
@@ -304,6 +307,7 @@ end
 print('+')
 
 end  --]
+]=] -- XXX Kernel Lua: end of chunk
 
 print("testing assignments, logical operators, and constructors")
 
@@ -372,9 +376,16 @@ assert(a[1<2] == 20 and a[1>2] == 10)
 function f(a) return a end
 
 local a = {}
+_USPACE[[
 for i=3000,-3000,-1 do a[i + 0.0] = i; end
 a[10e30] = "alo"; a[true] = 10; a[false] = 20
 assert(a[10e30] == 'alo' and a[not 1] == 20 and a[10<20] == 10)
+]]
+_KSPACE[[
+for i=3000,-3000,-1 do a[i + 0] = i; end
+a[true] = 10; a[false] = 20
+assert(a[not 1] == 20 and a[10<20] == 10)
+]]
 for i=3000,-3000,-1 do assert(a[i] == i); end
 a[print] = assert
 a[f] = print
@@ -396,6 +407,7 @@ a[1].alo(a[2]==10 and b==10 and c==print)
 -- test of large float/integer indices 
 
 -- compute maximum integer where all bits fit in a float
+_USPACE[[
 local maxint = math.maxinteger
 
 while maxint - 1.0 == maxint - 0.0 do   -- trim (if needed) to fit in a float
@@ -420,6 +432,7 @@ assert(a[maxintF] == 20 and a[maxintF - 1.0] == 11 and
        a[-maxintF] == 22 and a[-maxintF + 1.0] == 13)
 
 a = nil
+]]
 
 
 -- test conflicts in multiple assignment

@@ -33,6 +33,7 @@ local function foo ()
      241, 242, 243, 244, 245, 246, 247, 248,
      249, 250, 251, 252, 253, 254, 255, 256,
   }
+_USPACE[[
   assert(24.5 + 0.6 == 25.1)
   local t = {foo = function (self, x) return x + self.x end, x = 10}
   t.t = t
@@ -40,6 +41,16 @@ local function foo ()
   assert(t.t:foo(0.5) == 10.5)   -- bug in 5.2 alpha
   assert(24.3 == 24.3)
   assert((function () return t.x end)() == 10)
+]]
+_KSPACE[[
+  assert(24 + 1 == 25)
+  local t = {foo = function (self, x) return x + self.x end, x = 10}
+  t.t = t
+  assert(t:foo(2) == 12)
+  assert(t.t:foo(1) == 11)   -- bug in 5.2 alpha
+  assert(24 == 24)
+  assert((function () return t.x end)() == 10)
+]]
 end
 
 
@@ -51,6 +62,7 @@ if _soft then return 10 end
 print "testing large programs (>64k)"
 
 -- template to create a very big test file
+_USPACE[=[
 prog = [[$
 
 local a,b
@@ -110,6 +122,68 @@ xxxx = nil
 return 10
 
 ]]
+]=]
+_KSPACE[=[
+prog = [[$
+
+local a,b
+
+b = {$1$
+  b30009 = 65534,
+  b30010 = 65535,
+  b30011 = 65536,
+  b30012 = 65537,
+  b30013 = 16777214,
+  b30014 = 16777215,
+  b30015 = 16777216,
+  b30016 = 16777217,
+  b30017 = 0x7fffff,
+  b30018 = -0x7fffff,
+  b30019 = 0x1ffffff,
+  b30020 = -0x1ffffd,
+  b30021 = -65534,
+  b30022 = -65535,
+  b30023 = -65536,
+  b30024 = -0xffffff,
+  b30025 = 15012,
+  $2$
+};
+
+assert(b.a50008 == 25004 and b["a11"] == -5)
+assert(b.a33007 == -16503 and b.a50009 == -25004)
+assert(b["b"..30024] == -0xffffff)
+
+function b:xxx (a,b) return a+b end
+assert(b:xxx(10, 12) == 22)   -- pushself with non-constant index
+b.xxx = nil
+
+s = 0; n=0
+for a,b in pairs(b) do s=s+b; n=n+1 end
+-- with 32-bit floats, exact value of 's' depends on summation order
+assert(81800000 < s and s < 81870000 and n == 70001)
+
+a = nil; b = nil
+print'+'
+
+function f(x) b=x end
+
+a = f{$3$} or 10
+
+assert(a==10)
+assert(b[1] == "a10" and b[2] == 5 and b[#b-1] == "a50009")
+
+
+function xxxx (x) return b[x] end
+
+assert(xxxx(3) == "a11")
+
+a = nil; b=nil
+xxxx = nil
+
+return 10
+
+]]
+]=]
 
 -- functions to fill in the $n$
 

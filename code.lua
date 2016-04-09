@@ -24,6 +24,7 @@ local function checkKlist (func, list)
   end
 end
 
+_USPACE[[
 local function foo ()
   local a
   a = 3;
@@ -35,6 +36,20 @@ local function foo ()
 end
 
 checkKlist(foo, {3, 0, 0.0, 3.78/4, -3.78/4, -3.79/4, 3.0})
+]]
+_KSPACE[[
+local function foo ()
+  local a
+  a = 3;
+  a = 0; a = -7 + 7
+  a = 3/4; a = 3/4
+  a = -3/4; a = 3/4; a = -3/4
+  a = -4/4; a = 0; a = -0;
+  a = 3; a = 4; a = 3; a = 4
+end
+
+checkKlist(foo, {3, 0, 3/4, -3/4, -4/4, 4})
+]]
 
 
 -- testing opcodes
@@ -113,6 +128,7 @@ check(function () return not not true end, 'LOADBOOL', 'RETURN')
 check(function () return not not 1 end, 'LOADBOOL', 'RETURN')
 
 -- direct access to locals
+_USPACE[[
 check(function ()
   local a,b,c,d
   a = b*2
@@ -122,6 +138,18 @@ end,
   'MUL',
   'DIV', 'ADD', 'GETTABLE', 'SUB', 'GETTABLE', 'POW',
     'UNM', 'SETTABLE', 'SETTABLE', 'RETURN')
+]]
+_KSPACE[[
+check(function ()
+  local a,b,c,d
+  a = b*2
+  c[4], a[b] = exp(-(a + d/-20 - a[b]), a.x), b
+end,
+  'LOADNIL',
+  'MUL',
+  'DIV', 'ADD', 'GETTABLE', 'SUB', 'GETTABLE',
+    'UNM', 'SETTABLE', 'SETTABLE', 'RETURN')
+]]
 
 
 -- direct access to constants
@@ -147,24 +175,45 @@ local function checkK (func, val)
   assert(#k == 1 and k[1] == val and math.type(k[1]) == math.type(val))
   assert(func() == val)
 end
+_USPACE[[
 checkK(function () return 0.0 end, 0.0)
+]]
 checkK(function () return 0 end, 0)
 checkK(function () return -0//1 end, 0)
+_USPACE[[
 checkK(function () return 3^-1 end, 1/3)
 checkK(function () return (1 + 1)^(50 + 50) end, 2^100)
 checkK(function () return (-2)^(31 - 2) end, -0x20000000 + 0.0)
 checkK(function () return (-3^0 + 5) // 3.0 end, 1.0)
+]]
 checkK(function () return -3 % 5 end, 2)
+_USPACE[[
 checkK(function () return -((2.0^8 + -(-1)) % 8)/2 * 4 - 3 end, -5.0)
 checkK(function () return -((2^8 + -(-1)) % 8)//2 * 4 - 3 end, -7.0)
+]]
+_USPACE[[
 checkK(function () return 0xF0.0 | 0xCC.0 ~ 0xAA & 0xFD end, 0xF4)
+]]
+_KSPACE[[
+checkK(function () return 0xF0 | 0xCC ~ 0xAA & 0xFD end, 0xF4)
+]]
 checkK(function () return ~(~0xFF0 | 0xFF0) end, 0)
+_USPACE[[
 checkK(function () return ~~-100024.0 end, -100024)
+]]
+_KSPACE[[
+checkK(function () return ~~-100024 end, -100024)
+]]
 checkK(function () return ((100 << 6) << -4) >> 2 end, 100)
 
 
 -- no foldings
+_USPACE[[
 check(function () return -0.0 end, 'LOADK', 'UNM', 'RETURN')
+]]
+_KSPACE[[
+check(function () return -0 end, 'LOADK', 'UNM', 'RETURN')
+]]
 check(function () return 3/0 end, 'DIV', 'RETURN')
 check(function () return 0%0 end, 'MOD', 'RETURN')
 check(function () return -4//0 end, 'IDIV', 'RETURN')

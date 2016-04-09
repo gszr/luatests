@@ -141,11 +141,22 @@ assert(cap[0] == "sub" and cap[1] == '5' and cap[2] == a and cap[3]==nil)
 assert(a*a == a)
 assert(cap[0] == "mul" and cap[1] == a and cap[2] == a and cap[3]==nil)
 assert(a/0 == a)
+_USPACE([[
 assert(cap[0] == "div" and cap[1] == a and cap[2] == 0 and cap[3]==nil)
+]], _ENV)
+_KSPACE([[
+assert(cap[0] == "idiv" and cap[1] == a and cap[2] == 0 and cap[3]==nil)
+]], _ENV)
 assert(a%2 == a)
 assert(cap[0] == "mod" and cap[1] == a and cap[2] == 2 and cap[3]==nil)
+_USPACE([[
 assert(a // (1/0) == a)
 assert(cap[0] == "idiv" and cap[1] == a and cap[2] == 1/0 and cap[3]==nil)
+]], _ENV)
+_KSPACE([[
+assert(a // pcall("1/0") == a)
+assert(cap[0] == "idiv" and cap[1] == a and cap[2] == pcall("1/0") and cap[3]==nil)
+]], _ENV)
 assert(a & "hi" == a)
 assert(cap[0] == "band" and cap[1] == a and cap[2] == "hi" and cap[3]==nil)
 assert(a | "hi" == a)
@@ -154,6 +165,7 @@ assert("hi" ~ a == "hi")
 assert(cap[0] == "bxor" and cap[1] == "hi" and cap[2] == a and cap[3]==nil)
 assert(-a == a)
 assert(cap[0] == "unm" and cap[1] == a)
+_USPACE([[
 assert(a^4 == a)
 assert(cap[0] == "pow" and cap[1] == a and cap[2] == 4 and cap[3]==nil)
 assert(a^'4' == a)
@@ -162,14 +174,21 @@ assert(4^a == 4)
 assert(cap[0] == "pow" and cap[1] == 4 and cap[2] == a and cap[3]==nil)
 assert('4'^a == '4')
 assert(cap[0] == "pow" and cap[1] == '4' and cap[2] == a and cap[3]==nil)
+]], _ENV)
 assert(#a == a)
 assert(cap[0] == "len" and cap[1] == a)
 assert(~a == a)
 assert(cap[0] == "bnot" and cap[1] == a)
 assert(a << 3 == a)
 assert(cap[0] == "shl" and cap[1] == a and cap[2] == 3)
+_USPACE([[
 assert(1.5 >> a == 1.5)
 assert(cap[0] == "shr" and cap[1] == 1.5 and cap[2] == a)
+]], _ENV)
+_KSPACE([[
+assert(1 >> a == 1)
+assert(cap[0] == "shr" and cap[1] == 1 and cap[2] == a)
+]], _ENV)
 
 
 -- test for rawlen
@@ -398,7 +417,12 @@ debug.setmetatable(10, mt)
 assert(getmetatable(-2) == mt)
 assert((10)[3] == 13)
 assert((10)["3"] == 13)
+_USPACE[[
 assert(#3.45 == 3)
+]]
+_KSPACE[[
+assert(#3 == 3)
+]]
 debug.setmetatable(23, nil)
 assert(getmetatable(-2) == nil)
 

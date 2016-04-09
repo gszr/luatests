@@ -82,6 +82,7 @@ f()
 assert(c.a == 3)
 
 -- old test for limits for special instructions (now just a generic test)
+_USPACE[=[
 do
   local i = 2
   local p = 4    -- p == 2^i
@@ -100,6 +101,7 @@ do
     p = 2 * p;  i = i + 1
   until p <= 0
 end
+]=]
 
 print'+'
 

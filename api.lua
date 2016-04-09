@@ -35,9 +35,11 @@ assert(T.testC("settop 10; absindex 1; return 1") == 1)
 assert(T.testC("settop 10; absindex R; return 1") < -10)
 
 -- testing alignment
+_USPACE[[
 a = T.d2s(12458954321123.0)
 assert(a == string.pack("d", 12458954321123.0))
 assert(T.s2d(a) == 12458954321123.0)
+]]
 
 a,b,c = T.testC("pushnum 1; pushnum 2; pushnum 3; return 2")
 assert(a == 2 and b == 3 and not c)
@@ -166,23 +168,43 @@ assert(a[2] == 14 and a[3] == "a31" and a[4] == nil and _G.a == "a31")
 
 
 -- testing arith
+_USPACE[[
 assert(T.testC("pushnum 10; pushnum 20; arith /; return 1") == 0.5)
+]]
+_KSPACE[[
+assert(T.testC("pushnum 10; pushnum 20; arith /; return 1") == 0)
+]]
 assert(T.testC("pushnum 10; pushnum 20; arith -; return 1") == -10)
 assert(T.testC("pushnum 10; pushnum -20; arith *; return 1") == -200)
+_USPACE[[
 assert(T.testC("pushnum 10; pushnum 3; arith ^; return 1") == 1000)
+]]
+_USPACE[[
 assert(T.testC("pushnum 10; pushstring 20; arith /; return 1") == 0.5)
+]]
+_KSPACE[[
+assert(T.testC("pushnum 10; pushstring 20; arith /; return 1") == 0)
+]]
 assert(T.testC("pushstring 10; pushnum 20; arith -; return 1") == -10)
 assert(T.testC("pushstring 10; pushstring -20; arith *; return 1") == -200)
+_USPACE[[
 assert(T.testC("pushstring 10; pushstring 3; arith ^; return 1") == 1000)
+]]
+_USPACE[[
 assert(T.testC("arith /; return 1", 2, 0) == 10.0/0)
+]]
+_USPACE[[
 a = T.testC("pushnum 10; pushint 3; arith \\; return 1")
 assert(a == 3.0 and math.type(a) == "float")
+]]
 a = T.testC("pushint 10; pushint 3; arith \\; return 1")
 assert(a == 3 and math.type(a) == "integer")
 a = assert(T.testC("pushint 10; pushint 3; arith +; return 1"))
 assert(a == 13 and math.type(a) == "integer")
+_USPACE[[
 a = assert(T.testC("pushnum 10; pushint 3; arith +; return 1"))
 assert(a == 13 and math.type(a) == "float")
+]]
 a,b,c = T.testC([[pushnum 1;
                   pushstring 10; arith _;
                   pushstring 5; return 3]])
@@ -580,10 +602,18 @@ checkerr("got light userdata", debug.setuservalue, T.pushuserdata(1), {})
 
 local b = T.newuserdata(0)
 assert(debug.getuservalue(b) == nil)
+_USPACE[[
 for _, v in pairs{true, false, 4.56, print, {}, b, "XYZ"} do
   assert(debug.setuservalue(b, v) == b)
   assert(debug.getuservalue(b) == v)
 end
+]]
+_KSPACE[[
+for _, v in pairs{true, false, 4, print, {}, b, "XYZ"} do
+  assert(debug.setuservalue(b, v) == b)
+  assert(debug.getuservalue(b) == v)
+end
+]]
 
 assert(debug.getuservalue(4) == nil)
 

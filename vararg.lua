@@ -46,6 +46,7 @@ assert(t:f(1,4) == 3 and t:f(2) == 11)
 print('+')
 
 lim = 20
+_USPACE[[
 local i, a = 1, {}
 while i <= lim do a[i] = i+0.3; i=i+1 end
 
@@ -61,6 +62,24 @@ end
 
 call(f, a)
 call(g, a)
+]]
+_KSPACE[[
+local i, a = 1, {}
+while i <= lim do a[i] = i+3; i=i+1 end
+
+function f(a, b, c, d, ...)
+  local more = {...}
+  assert(a == 1+3 and more[1] == 5+3 and
+         more[lim-4] == lim+3 and not more[lim-3])
+end
+
+function g(a,b,c)
+  assert(a == 1+3 and b == 2+3 and c == 3+3)
+end
+
+call(f, a)
+call(g, a)
+]]
 
 a = {}
 i = 1

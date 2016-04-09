@@ -48,6 +48,7 @@ if not T then
 else --[
 -- testing table sizes
 
+_USPACE[[
 local function log2 (x) return math.log(x, 2) end
 
 local function mp2 (n)   -- minimum power of 2 >= n
@@ -55,6 +56,7 @@ local function mp2 (n)   -- minimum power of 2 >= n
   assert(n == 0 or (mp/2 < n and n <= mp))
   return mp
 end
+]]
 
 local function fb (n)
   local r, nn = T.int2fb(n)
@@ -62,6 +64,7 @@ local function fb (n)
   return nn
 end
 
+_USPACE[[
 -- test fb function
 for a = 1, 10000 do   -- all numbers up to 10^4
   local n = fb(a)
@@ -74,6 +77,7 @@ while a < lim do
   assert(a <= n and n <= a*1.125)
   a = math.ceil(a*1.3)
 end
+]]
 
  
 local function check (t, na, nh)
@@ -297,20 +301,28 @@ end
 
 assert(table.maxn{} == 0)
 assert(table.maxn{["1000"] = true} == 0)
+_USPACE[[
 assert(table.maxn{["1000"] = true, [24.5] = 3} == 24.5)
+]]
+_KSPACE[[
+assert(table.maxn{["1000"] = true, [24] = 3} == 24)
+]]
 assert(table.maxn{[1000] = true} == 1000)
 assert(table.maxn{[10] = true, [100*math.pi] = print} == 100*math.pi)
 
 table.maxn = nil
 
+_USPACE[[
 -- int overflow
 a = {}
 for i=0,50 do a[2^i] = true end
 assert(a[#a])
+]]
 
 print('+')
 
 
+_USPACE[[
 -- erasing values
 local t = {[{1}] = 1, [{2}] = 2, [string.rep("x ", 4)] = 3,
            [100.3] = 4, [4] = 5}
@@ -324,6 +336,22 @@ for k, v in pairs( t ) do
   assert(t[k] == nil)
 end
 assert(n == 5)
+]]
+_KSPACE[[
+-- erasing values
+local t = {[{1}] = 1, [{2}] = 2, [string.rep("x ", 4)] = 3,
+           [100] = 4, [4] = 5}
+
+local n = 0
+for k, v in pairs( t ) do
+  n = n+1
+  assert(t[k] == v)
+  t[k] = nil
+  collectgarbage()
+  assert(t[k] == nil)
+end
+assert(n == 5)
+]]
 
 
 local function test (a)
@@ -485,6 +513,7 @@ for i=0,1,-1 do error'not here' end
 a = nil; for i=1,1 do assert(not a); a=1 end; assert(a)
 a = nil; for i=1,1,-1 do assert(not a); a=1 end; assert(a)
 
+_USPACE[[
 do
   print("testing floats in numeric for")
   local a
@@ -504,10 +533,12 @@ do
   a = 0; for i=99999, 1e5, -1.0 do a=a+1 end; assert(a==0)
   a = 0; for i=1.0, 0.99999, -1 do a=a+1 end; assert(a==1)
 end
+]]
 
 -- conversion
 a = 0; for i="10","1","-2" do a=a+1 end; assert(a==5)
 
+_USPACE[[
 do  -- checking types
   local c
   local function checkfloat (i)
@@ -561,6 +592,47 @@ do  -- checking types
   for i = math.maxinteger, 10e100, -1 do assert(false) end
 
 end
+]]
+_KSPACE[[
+do  -- checking types
+  local c
+  local function checkint (i)
+    assert(math.type(i) == "integer")
+    c = c + 1
+  end
+
+  local m = math.maxinteger
+  c = 0; for i = m, m - 10, -1 do checkint(i) end
+  assert(c == 11)
+
+  c = 0; for i = 1, 10 do checkint(i) end
+  assert(c == 10)
+
+  c = 0; for i = 10, 1, -1 do checkint(i) end
+  assert(c == 10)
+
+  c = 0; for i = 1, "10" do checkint(i) end
+  assert(c == 10)
+
+  c = 0; for i = 9, "4", -1 do checkint(i) end
+  assert(c == 6)
+
+  c = 0; for i = 0, " -3  ", -1 do checkint(i) end
+  assert(c == 4)
+
+  c = 0; for i = 100, "97", -2 do checkint(i) end
+  assert(c == 2)
+
+  c = 0; for i = 1, math.huge do if i > 10 then break end; checkint(i) end
+  assert(c == 10)
+
+  c = 0; for i = -1, -math.huge, -1 do
+           if i < -10 then break end; checkint(i)
+          end
+  assert(c == 10)
+
+end
+]]
 
 collectgarbage()
 

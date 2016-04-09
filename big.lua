@@ -8,7 +8,13 @@ print "testing large tables"
 
 local debug = require"debug" 
 
+_USPACE[[
 local lim = 2^18 + 1000
+]]
+_KSPACE[[
+lim = exp(2, 18) + 1000
+]]
+
 local prog = { "local y = {0" }
 for i = 1, lim do prog[#prog + 1] = i  end
 prog[#prog + 1] = "}\n"
@@ -54,6 +60,7 @@ f, X = nil
 
 coroutine.yield'b'
 
+_USPACE[[
 if 2^32 == 0 then   -- (small integers) {   
 
 print "testing string length overflow"
@@ -75,6 +82,7 @@ local a, b = pcall(rep, longs)   -- call that function
 assert(not a and string.find(b, "overflow"))
 
 end   -- }
+]]
 
 print'OK'
 

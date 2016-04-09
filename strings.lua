@@ -127,8 +127,14 @@ assert(#tostring('\0') == 1)
 assert(tostring(true) == "true")
 assert(tostring(false) == "false")
 assert(tostring(-1203) == "-1203")
+_USPACE[[
 assert(tostring(1203.125) == "1203.125")
 assert(tostring(-0.5) == "-0.5")
+]]
+_KSPACE[[
+assert(tostring(1203) == "1203")
+assert(tostring(-0) == "0")
+]]
 assert(tostring(-32767) == "-32767")
 if 2147483647 > 0 then   -- no overflow? (32 bits)
   assert(tostring(-2147483647) == "-2147483647")
@@ -138,6 +144,7 @@ if 4611686018427387904 > 0 then   -- no overflow? (64 bits)
   assert(tostring(-4611686018427387904) == "-4611686018427387904")
 end
 
+_USPACE[[
 if tostring(0.0) == "0.0" then   -- "standard" coercion float->string
   assert('' .. 12 == '12' and 12.0 .. '' == '12.0')
   assert(tostring(-1203 + 0.0) == "-1203.0")
@@ -146,6 +153,7 @@ else   -- compatible coercion
   assert('' .. 12 == '12' and 12.0 .. '' == '12')
   assert(tostring(-1203 + 0.0) == "-1203")
 end
+]]
 
 
 x = '"ílo"\n\\'
@@ -161,7 +169,12 @@ assert(string.format("%c",34)..string.format("%c",48)..string.format("%c",90)..s
        string.format("%c%c%c%c", 34, 48, 90, 100))
 assert(string.format("%s\0 is not \0%s", 'not be', 'be') == 'not be\0 is not \0be')
 assert(string.format("%%%d %010d", 10, 23) == "%10 0000000023")
+_USPACE[[
 assert(tonumber(string.format("%f", 10.3)) == 10.3)
+]]
+_KSPACE[[
+assert(tonumber(string.format("%d", 10)) == 10)
+]]
 x = string.format('"%-50s"', 'a')
 assert(#x == 52)
 assert(string.sub(x, 1, 4) == '"a  ')
@@ -182,13 +195,20 @@ local m = setmetatable({}, {__tostring = function () return "hello" end})
 assert(string.format("%s %.10s", m, m) == "hello hello")
 
 
+_USPACE[[
 assert(string.format("%x", 0.0) == "0")
 assert(string.format("%02x", 0.0) == "00")
+]]
+_KSPACE[[
+assert(string.format("%x", 0) == "0")
+assert(string.format("%02x", 0) == "00")
+]]
 assert(string.format("%08X", 4294967295) == "FFFFFFFF")
 assert(string.format("%+08d", 31501) == "+0031501")
 assert(string.format("%+08d", -30927) == "-0030927")
 
 
+_USPACE[[
 do    -- longest number that can be formatted
   local i = 1
   local j = 10000
@@ -201,6 +221,7 @@ do    -- longest number that can be formatted
   assert(string.len(s) >= i + 101)
   assert(tonumber(s) == -(10^i))
 end
+]]
 
 
 -- testing large numbers for format
@@ -214,6 +235,7 @@ do   -- assume at least 32 bits
   assert(string.format("%u", 0xffffffff) == "4294967295")
   assert(string.format("%o", 0xABCD) == "125715")
 
+_USPACE[[
   max, min = 0x7fffffffffffffff, -0x8000000000000000
   if max > 2.0^53 then  -- only for 64 bits
     assert(string.format("%x", (2^52 | 0) - 1) == "fffffffffffff")
@@ -227,9 +249,11 @@ do   -- assume at least 32 bits
     assert(string.format("%u", ~(-1 << 64)) == "18446744073709551615")
     assert(tostring(1234567890123) == '1234567890123')
   end
+]]
 end
 
 
+_USPACE[[
 do print("testing 'format %a %A'")
   local function matchhexa (n)
     local s = string.format("%a", n)
@@ -262,6 +286,7 @@ do print("testing 'format %a %A'")
     assert(string.find(string.format("%.4A", -12), "^%-0X%x%.%x000P%+?%d$"))
   end
 end
+]]
 
 
 -- errors in format

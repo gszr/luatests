@@ -21,12 +21,16 @@ if false then a = 3 // 0; a = 0 % 0 end
 
 -- testing priorities
 
+_USPACE[[
 assert(2^3^2 == 2^(3^2));
 assert(2^3*4 == (2^3)*4);
 assert(2.0^-2 == 1/4 and -2^- -2 == - - -4);
+]]
 assert(not nil and 2 and not(2>3 or 3<2));
 assert(-3-1-5 == 0+0-9);
+_USPACE[[
 assert(-2^2 == -4 and (-2)^2 == 4 and 2*2-3-1 == 0);
+]]
 assert(-3%5 == 2 and -3+5 == 2)
 assert(2*1+3/3 == 3 and 1+2 .. 3*1 == "33");
 assert(not(2+1 > 3*1) and "a".."b" > "a");
@@ -39,9 +43,11 @@ assert(0xF0 | 0xCC ~ 0xAA & 0xFD == 0xF4)
 assert(0xFD & 0xAA ~ 0xCC | 0xF0 == 0xF4)
 assert(0xF0 & 0x0F + 1 == 0x10)
 
+_USPACE[[
 assert(3^4//2^3//5 == 2)
 
 assert(-3+4*5//2^3^2//9+4%10/3 == (-3)+(((4*5)//(2^(3^2)))//9)+((4%10)/3))
+]]
 
 assert(not ((true or false) and nil))
 assert(      true or false  and nil)
@@ -51,7 +57,12 @@ assert((((1 or false) and true) or false) == true)
 assert((((nil and true) or false) and true) == false)
 
 local a,b = 1,nil;
+_USPACE[[
 assert(-(1 or 2) == -1 and (1 and 2)+(-1.25 or -4) == 0.75);
+]]
+_KSPACE[[
+assert(-(1 or 2) == -1 and (1 and 2)+(-1 or -4) == 1);
+]]
 x = ((b or a)+1 == 2 and (10 or a)+1 == 11); assert(x);
 x = (((2<3) or 1) == true and (2<3 and 4) == 4); assert(x);
 
@@ -304,9 +315,16 @@ checkload("x:call", "expected")
 
 if not _soft then
   -- control structure too long
+_USPACE[[
   local s = string.rep("a = a + 1\n", 2^18)
   s = "while true do " .. s .. "end"
   checkload(s, "too long")
+]]
+_KSPACE[[
+  local s = string.rep("a = a + 1\n", exp(2, 18))
+  s = "while true do " .. s .. "end"
+  checkload(s, "too long")
+]]
 end
 
 print'OK'

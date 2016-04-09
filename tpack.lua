@@ -24,11 +24,20 @@ assert(1 <= sizeshort and sizeshort <= sizeint and sizeint <= sizelong and
        sizefloat <= sizedouble)
 
 print("platform:")
+_USPACE[[
 print(string.format(
   "\tshort %d, int %d, long %d, size_t %d, float %d, double %d,\n\z
    \tlua Integer %d, lua Number %d",
    sizeshort, sizeint, sizelong, sizesize_t, sizefloat, sizedouble,
    sizeLI, sizenumber))
+]]
+_KSPACE[[
+print(string.format(
+  "\tshort %d, int %d, long %d, size_t %d,\n\z
+   \tlua Integer %d, lua Number %d",
+   sizeshort, sizeint, sizelong, sizesize_t,
+   sizeLI, sizenumber))
+]]
 print("\t" .. (little and "little" or "big") .. " endian")
 print("\talignment: " .. align)
 
@@ -134,6 +143,7 @@ checkerror("variable%-length format", packsize, "z")
 -- overflow in option size  (error will be in digit after limit)
 checkerror("invalid format", packsize, "c1" .. string.rep("0", 40))
 
+_USPACE[[
 if packsize("i") == 4 then
   -- result would be 2^31  (2^3 repetitions of 2^28 strings)
   local s = string.rep("c268435456", 2^3)
@@ -142,6 +152,17 @@ if packsize("i") == 4 then
   s = string.rep("c268435456", 2^3 - 1) .. "c268435455"
   assert(packsize(s) == 0x7fffffff)
 end
+]]
+_KSPACE[[
+if packsize("i") == 4 then
+  -- result would be 2^31  (2^3 repetitions of 2^28 strings)
+  local s = string.rep("c268435456", 8)
+  checkerror("too large", packsize, s)
+  -- one less is OK
+  s = string.rep("c268435456", 8 - 1) .. "c268435455"
+  assert(packsize(s) == 0x7fffffff)
+end
+]]
 
 -- overflow in packing
 for i = 1, sizeLI - 1 do
@@ -166,12 +187,15 @@ assert(unpack(">j", pack(">j", math.maxinteger)) == math.maxinteger)
 assert(unpack("<j", pack("<j", math.mininteger)) == math.mininteger)
 assert(unpack("<J", pack("<j", -1)) == -1)   -- maximum unsigned integer
 
+_USPACE[[
 if little then
   assert(pack("f", 24) == pack("<f", 24))
 else
   assert(pack("f", 24) == pack(">f", 24))
 end
+]]
 
+_USPACE[[
 print "testing pack/unpack of floating-point numbers" 
 
 for _, n in ipairs{0, -1.1, 1.9, 1/0, -1/0, 1e20, -1e20, 0.1, 2000.7} do
@@ -189,6 +213,7 @@ for _, n in ipairs{0, -1.5, 1/0, -1/0, 1e10, -1e9, 0.5, 2000.25} do
   assert(unpack("<d", pack("<d", n)) == n)
   assert(unpack(">d", pack(">d", n)) == n)
 end
+]]
 
 print "testing pack/unpack of strings"
 do
@@ -234,6 +259,7 @@ end
 
 
 -- testing multiple types and sequence
+_USPACE[[
 do
   local x = pack("<b h b f d f n i", 1, 2, 3, 4, 5, 6, 7, 8)
   assert(#x == packsize("<b h b f d f n i"))
@@ -241,6 +267,15 @@ do
   assert(a == 1 and b == 2 and c == 3 and d == 4 and e == 5 and f == 6 and
          g == 7 and h == 8) 
 end
+]]
+_KSPACE[[
+do
+  local x = pack("<b h b n i", 1, 2, 3, 4, 5)
+  assert(#x == packsize("<b h b n i"))
+  local a, b, c, d, e = unpack("<b h b n i", x)
+  assert(a == 1 and b == 2 and c == 3 and d == 4 and e == 5)
+end
+]]
 
 print "testing alignment"
 do
@@ -261,11 +296,20 @@ do
   assert(a == "abc" and b == "abcd" and c == "xz" and d == "hello" and
          e == 5 and f == "world" and g == "xy" and (pos - 1) % 4 == 0)
 
+_USPACE[[
   x = pack(" b b Xd b Xb x", 1, 2, 3)
   assert(packsize(" b b Xd b Xb x") == 4)
   assert(x == "\1\2\3\0")
   a, b, c, pos = unpack("bbXdb", x)
   assert(a == 1 and b == 2 and c == 3 and pos == #x)
+]]
+_KSPACE[[
+  x = pack(" b b Xi b Xb x", 1, 2, 3)
+  assert(packsize(" b b Xi b Xb x") == 4)
+  assert(x == "\1\2\3\0")
+  a, b, c, pos = unpack("bbXib", x)
+  assert(a == 1 and b == 2 and c == 3 and pos == #x)
+]]
 
   -- only alignment
   assert(packsize("!8 xXi8") == 8)
