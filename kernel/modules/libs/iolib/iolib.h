@@ -1,15 +1,22 @@
 #ifndef _IOLIB_H
 #define _IOLIB_H
 
-int kclose(int);
-int kopen(const char*, int, int, int*);
-int kwrite(int, void*, size_t, size_t*);
-int kread(int, void*, size_t, size_t*);
+#include <sys/types.h>
+#include <sys/file.h>
 
-file_t* kfopen(const char*, const char*, int*);
-file_t* kfdopen(int fd);
+typedef struct kfile {
+	file_t *f;
+	int    fd;
+} KFILE;
 
-char kgetc(int fd);
+KFILE* kfopen(const char*, const char*);
+int kfclose(KFILE*);
+int kclose(int fd);
+
+size_t kfwrite(const void*, size_t, KFILE*);
+size_t kfread (void*, size_t, KFILE*);
+
+int kfgetc(KFILE*);
 
 int kremove(const char*);
 

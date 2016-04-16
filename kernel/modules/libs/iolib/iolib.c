@@ -3,16 +3,23 @@
  */
 
 #include <sys/filedesc.h>
-#include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/vnode.h>
 #include <sys/ktrace.h>
 #include <sys/uio.h>
 #include <sys/vfs_syscalls.h>
+#include <sys/malloc.h>
 
 #include "iolib.h"
 
 #define PERMS ALLPERMS
+
+// XXX Both functions below were copied from the NetBSD tree; the only change is
+// that uio_vmspace is set to kernel space
+static int dofilewrite_(int, struct file *, const void *, size_t, off_t *, int, 
+                        register_t *);
+static int dofileread_(int, struct file *, void *, size_t, off_t *, int,
+                        register_t *);
 
 int
 kclose(int fd)
@@ -20,21 +27,39 @@ kclose(int fd)
 	if (fd_getfile(fd) != NULL)
 		return fd_close(fd);
 	return -1;
-} 
+}
 
 int
+kfclose(KFILE *fp)
+{
+	int ret = 0;
+
+	if (fd_getfile(fp->fd) != NULL)
+		ret = fd_close(fp->fd);
+
+	kern_free(fp);
+
+	return ret;
+}
+
+static int
 kopen(const char *path, int mode, int perms, int *fd)
 {
 	return fd_open(path, mode, perms, fd);
 }
 
-struct file*
-kfopen(const char *path, const char *mode, int *fd)
+KFILE*
+kfopen(const char *path, const char *mode)
 {
 	int err;
-	struct file *fp;
 	int omode;
+	KFILE *fp;
 
+	if (!(fp = kern_malloc(sizeof(KFILE), M_WAITOK | M_ZERO)))
+		//TODO handle errors
+		;
+
+	//TODO :'(
 	if (*mode == 'r')
 		omode = FREAD;
 	else if (*mode == 'w')
@@ -42,47 +67,69 @@ kfopen(const char *path, const char *mode, int *fd)
 	else
 		return NULL;
 
-	if ((err = kopen(path, omode, PERMS, fd)) != 0)
+	if ((err = kopen(path, omode, PERMS, &fp->fd)) != 0)
 		return NULL;
 
-	fp = fd_getfile(*fd);
-	fd_putfile(*fd);
+	fp->f = fd_getfile(fp->fd);
+	fd_putfile(fp->fd);
 	
     return fp;
 }
 
-file_t*
-kfdopen(int fd)
-{
-	file_t *f;
-	if ((f = fd_getfile(fd)) != NULL)
-		fd_close(fd);
-
-	return f;
-}
-
-char
-kgetc(int fd)
+int
+kfgetc(KFILE *fp)
 {
 	char ch;
 	size_t n;
-	//XXX
-	kread(fd, &ch, 1, &n);
-	if (n == 1)
-		return ch;
-	else
-		return -1;
+
+	if (!fp)
+		return 0;
+
+	return kfread(&ch, 1, fp);
 }
 
 int
 kremove(const char *path)
 {
-	return do_sys_unlink(path, UIO_SYSSPACE);	
+	return do_sys_unlink(path, UIO_SYSSPACE);
+}
+
+
+size_t
+kfwrite(const void *buf, size_t nbyte, KFILE *fp)
+{
+	size_t nwritten = 0;
+
+	if ((fp->f->f_flag & FWRITE) == 0) {
+		fd_putfile(fp->fd);
+		return (EBADF);
+	}
+
+	dofilewrite_(fp->fd, fp->f, buf, nbyte, &fp->f->f_offset,
+                        FOF_UPDATE_OFFSET, &nwritten);
+	return nwritten;
+}
+
+size_t
+kfread(void *buf, size_t nbyte, KFILE *fp)
+{
+	size_t nread = 0;
+
+	//XXX check it out again; don't quite remember why I commented it out
+	/*if ((fp->f_flag & FREAD) == 0) {
+		printf("bad f2");
+		fd_putfile(fd);
+		return (EBADF);
+	} */
+
+	dofileread_(fp->fd, fp->f, buf, nbyte, &fp->f->f_offset,
+                       FOF_UPDATE_OFFSET, &nread);
+	return nread;
 }
 
 static int
-dofileread_(int fd, struct file *fp, void *buf, size_t nbyte,
-	off_t *offset, int flags, register_t *retval)
+dofileread_(int fd, struct file *fp, void *buf, size_t nbyte, off_t *offset, 
+            int flags, register_t *retval)
 {
 	struct iovec aiov;
 	struct uio auio;
@@ -119,25 +166,6 @@ dofileread_(int fd, struct file *fp, void *buf, size_t nbyte,
  out:
 	fd_putfile(fd);
 	return (error);
-} 
- 
-int
-kread(int fd, void *buf, size_t nbyte, size_t *nr)
-{
-	file_t *fp;
-
-	if ((fp = fd_getfile(fd)) == NULL) 
-		return (EBADF);
-
-	//XXX why, god?
-	/*if ((fp->f_flag & FREAD) == 0) {
-		printf("bad f2");
-		fd_putfile(fd);
-		return (EBADF);
-	} */
-
-	return dofileread_(fd, fp, buf, nbyte, &fp->f_offset, 
-						FOF_UPDATE_OFFSET, nr);
 } 
 
 static int
@@ -185,22 +213,4 @@ dofilewrite_(int fd, struct file *fp, const void *buf,
  out:
 	fd_putfile(fd);
 	return (error);
-} 
- 
-
-int
-kwrite(int fd, void *buf, size_t nbyte, size_t *nr)
-{
-	file_t *fp;
-
-	if ((fp = fd_getfile(fd)) == NULL)
-		return (EBADF);
-
-	if ((fp->f_flag & FWRITE) == 0) {
-		fd_putfile(fd);
-		return (EBADF);
-	}
-
-	return dofilewrite_(fd, fp, buf, nbyte, &fp->f_offset, 
-						FOF_UPDATE_OFFSET, nr);
-}  
+}
