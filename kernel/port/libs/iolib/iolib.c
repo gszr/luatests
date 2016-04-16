@@ -12,9 +12,7 @@
 
 #include "iolib.h"
 
-#define PERMS ALLPERMS
-
-// XXX Both functions below were copied from the NetBSD tree; the only change is
+// Both functions below were copied from the NetBSD tree; the only change is
 // that uio_vmspace is set to kernel space
 static int dofilewrite_(int, struct file *, const void *, size_t, off_t *, int, 
                         register_t *);
@@ -42,12 +40,6 @@ kfclose(KFILE *fp)
 	return ret;
 }
 
-static int
-kopen(const char *path, int mode, int perms, int *fd)
-{
-	return fd_open(path, mode, perms, fd);
-}
-
 KFILE*
 kfopen(const char *path, const char *mode)
 {
@@ -64,15 +56,18 @@ kfopen(const char *path, const char *mode)
 		omode = FREAD;
 	else if (*mode == 'w')
 		omode = FWRITE | O_CREAT;
+	else if (*mode == 'a')
+		omode = FWRITE | FREAD;
 	else
 		return NULL;
 
-	if ((err = kopen(path, omode, PERMS, &fp->fd)) != 0)
+	//XXX replace ALLPERMS to something appropriate?
+	if ((err = fd_open(path, omode, ALLPERMS, &fp->fd)) != 0)
 		return NULL;
 
 	fp->f = fd_getfile(fp->fd);
 	fd_putfile(fp->fd);
-	
+
     return fp;
 }
 
@@ -83,7 +78,7 @@ kfgetc(KFILE *fp)
 	size_t n;
 
 	if (!fp)
-		return 0;
+		return -1;
 
 	return kfread(&ch, 1, fp);
 }
@@ -100,10 +95,8 @@ kfwrite(const void *buf, size_t nbyte, KFILE *fp)
 {
 	size_t nwritten = 0;
 
-	if ((fp->f->f_flag & FWRITE) == 0) {
-		fd_putfile(fp->fd);
-		return (EBADF);
-	}
+	if ((fp->f->f_flag & FWRITE) == 0)
+		return 0;
 
 	dofilewrite_(fp->fd, fp->f, buf, nbyte, &fp->f->f_offset,
                         FOF_UPDATE_OFFSET, &nwritten);
@@ -115,12 +108,8 @@ kfread(void *buf, size_t nbyte, KFILE *fp)
 {
 	size_t nread = 0;
 
-	//XXX check it out again; don't quite remember why I commented it out
-	/*if ((fp->f_flag & FREAD) == 0) {
-		printf("bad f2");
-		fd_putfile(fd);
-		return (EBADF);
-	} */
+//	if ((fp->f->f_flag & FREAD) == 0)
+//		return 0;
 
 	dofileread_(fp->fd, fp->f, buf, nbyte, &fp->f->f_offset,
                        FOF_UPDATE_OFFSET, &nread);
@@ -164,7 +153,7 @@ dofileread_(int fd, struct file *fp, void *buf, size_t nbyte, off_t *offset,
 	ktrgenio(fd, UIO_READ, buf, cnt, error);
 	*retval = cnt;
  out:
-	fd_putfile(fd);
+	//fd_putfile(fd);
 	return (error);
 } 
 
@@ -211,6 +200,6 @@ dofilewrite_(int fd, struct file *fp, const void *buf,
 	ktrgenio(fd, UIO_WRITE, buf, cnt, error);
 	*retval = cnt;
  out:
-	fd_putfile(fd);
+	//fd_putfile(fd);
 	return (error);
 }

@@ -9,8 +9,7 @@ local out = io.output(tmpname)
 print("io.output = " .. type(out))
 
 local prog = [[
-  print "Hello, kernel Lua world!"
-  print "testing dofile..."
+a = 2
 ]]
 
 print("writing to " .. tmpname .. "...")
