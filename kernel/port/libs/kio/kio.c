@@ -10,7 +10,7 @@
 #include <sys/vfs_syscalls.h>
 #include <sys/malloc.h>
 
-#include "iolib.h"
+#include "kio.h"
 
 // Both functions below were copied from the NetBSD tree; the only change is
 // that uio_vmspace is set to kernel space
@@ -18,14 +18,6 @@ static int dofilewrite_(int, struct file *, const void *, size_t, off_t *, int,
                         register_t *);
 static int dofileread_(int, struct file *, void *, size_t, off_t *, int,
                         register_t *);
-
-int
-kclose(int fd)
-{
-	if (fd_getfile(fd) != NULL)
-		return fd_close(fd);
-	return -1;
-}
 
 int
 kfclose(KFILE *fp)
@@ -66,7 +58,6 @@ kfopen(const char *path, const char *mode)
 		return NULL;
 
 	fp->f = fd_getfile(fp->fd);
-	fd_putfile(fp->fd);
 
     return fp;
 }

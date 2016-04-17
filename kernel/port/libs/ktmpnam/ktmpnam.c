@@ -6,18 +6,19 @@
 #include <sys/stat.h>
 #include <sys/fcntl.h>
 
-#include "mkstemp.h"
+#include "ktmpnam.h"
 
-int
-mkstemp(char *tmp)
+char*
+ktmpnam(char *tmp)
 {
-	register char *s;
-	register unsigned long rnd;
-	register int i;
-	int fd;
+	long  rnd;
+	char  *s;
+	int   fd;
+	int   i;
 
+	s   = tmp;
 	rnd = random();
-	s = tmp;
+
 	while (*s++)
     	;
 
@@ -27,13 +28,14 @@ mkstemp(char *tmp)
 		rnd /= 10;
 	}
 	s++;
-	i = 'a';
 
+	i = 'a';
 	while ((fd_open(tmp, O_CREAT|O_EXCL|O_RDWR, ALLPERMS, &fd)) != 0) {
 		if (i == 'z')
-			return(-1);
+			return NULL;
 		*s = i++;
 	}
+	fd_close(fd);
 
-	return fd;
-}  
+	return tmp;
+}

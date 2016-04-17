@@ -4,7 +4,7 @@ RCS file: /cvsroot/src/external/mit/lua/dist/src/lauxlib.c,v
 retrieving revision 1.6
 diff -u -r1.6 lauxlib.c
 --- cvs/src/external/mit/lua/dist/src/lauxlib.c	28 Jan 2016 14:41:39 -0000	1.6
-+++ cvs/src/external/mit/lua/dist/src/lauxlib.c	16 Apr 2016 23:55:06 -0000
++++ cvs/src/external/mit/lua/dist/src/lauxlib.c	17 Apr 2016 19:54:35 -0000
 @@ -228,7 +228,6 @@
  }
  
@@ -34,23 +34,12 @@ diff -u -r1.6 lauxlib.c
      if (feof(lf->f)) return NULL;
      *size = fread(lf->buff, 1, sizeof(lf->buff), lf->f);  /* read block */
 +#ifdef _KERNEL
-+	if (*size == 0) return NULL;
-+#endif
++    if (*size == 0) return NULL;
++#endif /* _KERNEL */
    }
    return lf->buff;
  }
-@@ -706,8 +706,10 @@
-   int c;
-   int fnameindex = lua_gettop(L) + 1;  /* index of filename on the stack */
-   if (filename == NULL) {
-+#ifndef _KERNEL
-     lua_pushliteral(L, "=stdin");
-     lf.f = stdin;
-+#endif
-   }
-   else {
-     lua_pushfstring(L, "@%s", filename);
-@@ -716,24 +718,27 @@
+@@ -716,24 +716,27 @@
    }
    if (skipcomment(&lf, &c))  /* read initial portion */
      lf.buff[lf.n++] = '\n';  /* add line to correct line numbers */
@@ -60,7 +49,7 @@ diff -u -r1.6 lauxlib.c
      if (lf.f == NULL) return errfile(L, "reopen", fnameindex);
      skipcomment(&lf, &c);  /* re-read initial portion */
    }
-+#endif
++#endif /* _KERNEL */
    if (c != EOF)
      lf.buff[lf.n++] = c;  /* 'c' is the first character of the stream */
    status = lua_load(L, getF, &lf, lua_tostring(L, -1), mode);
@@ -71,7 +60,7 @@ diff -u -r1.6 lauxlib.c
      lua_settop(L, fnameindex);  /* ignore results from 'lua_load' */
      return errfile(L, "read", fnameindex);
    }
-+#endif
++#endif /* _KERNEL */
    lua_remove(L, fnameindex);
    return status;
  }
@@ -85,7 +74,7 @@ RCS file: /cvsroot/src/external/mit/lua/dist/src/lauxlib.h,v
 retrieving revision 1.4
 diff -u -r1.4 lauxlib.h
 --- cvs/src/external/mit/lua/dist/src/lauxlib.h	28 Jan 2016 14:41:39 -0000	1.4
-+++ cvs/src/external/mit/lua/dist/src/lauxlib.h	16 Apr 2016 23:55:06 -0000
++++ cvs/src/external/mit/lua/dist/src/lauxlib.h	17 Apr 2016 19:54:35 -0000
 @@ -71,8 +71,8 @@
  LUALIB_API int (luaL_checkoption) (lua_State *L, int arg, const char *def,
                                     const char *const lst[]);
@@ -131,7 +120,7 @@ RCS file: /cvsroot/src/external/mit/lua/dist/src/lbaselib.c,v
 retrieving revision 1.6
 diff -u -r1.6 lbaselib.c
 --- cvs/src/external/mit/lua/dist/src/lbaselib.c	28 Jan 2016 14:41:39 -0000	1.6
-+++ cvs/src/external/mit/lua/dist/src/lbaselib.c	16 Apr 2016 23:55:06 -0000
++++ cvs/src/external/mit/lua/dist/src/lbaselib.c	17 Apr 2016 19:54:35 -0000
 @@ -289,7 +289,6 @@
  }
  
@@ -207,7 +196,7 @@ RCS file: /cvsroot/src/external/mit/lua/dist/src/linit.c,v
 retrieving revision 1.5
 diff -u -r1.5 linit.c
 --- cvs/src/external/mit/lua/dist/src/linit.c	28 Jan 2016 14:41:39 -0000	1.5
-+++ cvs/src/external/mit/lua/dist/src/linit.c	16 Apr 2016 23:55:06 -0000
++++ cvs/src/external/mit/lua/dist/src/linit.c	17 Apr 2016 19:54:35 -0000
 @@ -50,14 +50,10 @@
  #endif /* _KERNEL */
    {LUA_COLIBNAME, luaopen_coroutine},
@@ -229,7 +218,7 @@ RCS file: /cvsroot/src/external/mit/lua/dist/src/liolib.c,v
 retrieving revision 1.5
 diff -u -r1.5 liolib.c
 --- cvs/src/external/mit/lua/dist/src/liolib.c	28 Jan 2016 14:41:39 -0000	1.5
-+++ cvs/src/external/mit/lua/dist/src/liolib.c	16 Apr 2016 23:55:06 -0000
++++ cvs/src/external/mit/lua/dist/src/liolib.c	17 Apr 2016 19:54:35 -0000
 @@ -12,12 +12,14 @@
  #include "lprefix.h"
  
@@ -241,7 +230,7 @@ diff -u -r1.5 liolib.c
  #include <stdio.h>
  #include <stdlib.h>
  #include <string.h>
-+#endif
++#endif /* _KERNEL */
  
  #include "lua.h"
  
@@ -253,31 +242,33 @@ diff -u -r1.5 liolib.c
  /*
  ** {======================================================
  ** l_popen spawns a new process connected to the current
-@@ -132,6 +135,7 @@
+@@ -78,6 +81,8 @@
+ 
  #endif				/* } */
  
++#endif /* _KERNEL */
++
  /* }====================================================== */
-+#endif
  
  
- #define IO_PREFIX	"_IO_"
-@@ -148,6 +152,7 @@
- #define isclosed(p)	((p)->closef == NULL)
+@@ -96,6 +101,7 @@
+ #endif				/* } */
  
  
 +#ifndef _KERNEL
- static int io_type (lua_State *L) {
-   LStream *p;
-   luaL_checkany(L, 1);
-@@ -160,6 +165,7 @@
-     lua_pushliteral(L, "file");
-   return 1;
- }
-+#endif
+ /*
+ ** {======================================================
+ ** l_fseek: configuration for longer offsets
+@@ -133,6 +139,8 @@
  
+ /* }====================================================== */
  
- static int f_tostring (lua_State *L) {
-@@ -260,6 +266,7 @@
++#endif /* _KERNEL */
++
+ 
+ #define IO_PREFIX	"_IO_"
+ #define IOPREF_LEN	(sizeof(IO_PREFIX)/sizeof(char) - 1)
+@@ -260,6 +268,7 @@
  }
  
  
@@ -285,64 +276,50 @@ diff -u -r1.5 liolib.c
  /*
  ** function to close 'popen' files
  */
-@@ -284,6 +291,7 @@
-   p->f = tmpfile();
+@@ -285,6 +294,8 @@
    return (p->f == NULL) ? luaL_fileresult(L, 0, NULL) : 1;
  }
-+#endif
  
++#endif /* _KERNEL */
++
  
  static FILE *getiofile (lua_State *L, const char *findex) {
-@@ -323,6 +331,7 @@
+   LStream *p;
+@@ -425,6 +436,7 @@
  }
  
  
 +#ifndef _KERNEL
- static int io_readline (lua_State *L);
- 
- 
-@@ -470,6 +479,7 @@
+ /*
+ ** Read a number: first reads a valid prefix of a numeral into a buffer.
+ ** Then it calls 'lua_stringtonumber' to check whether the format is
+@@ -470,6 +482,8 @@
    lua_pushliteral(L, "");
    return (c != EOF);
  }
 +#endif
++
  
  
  static int read_line (lua_State *L, FILE *f, int chop) {
-@@ -479,10 +489,14 @@
-   while (c != EOF && c != '\n') {  /* repeat until end of line */
-     char *buff = luaL_prepbuffer(&b);  /* preallocate buffer */
-     int i = 0;
-+#ifndef _KERNEL
-     l_lockfile(f);  /* no memory errors can happen inside the lock */
-+#endif
-     while (i < LUAL_BUFFERSIZE && (c = l_getc(f)) != EOF && c != '\n')
-       buff[i++] = c;
-+#ifndef _KERNEL
-     l_unlockfile(f);
-+#endif
-     luaL_addsize(&b, i);
-   }
-   if (!chop && c == '\n')  /* want a newline and have one? */
 @@ -523,7 +537,9 @@
    int nargs = lua_gettop(L) - 1;
    int success;
    int n;
 +#ifndef _KERNEL
    clearerr(f);
-+#endif
++#endif /* _KERNEL */
    if (nargs == 0) {  /* no arguments? */
      success = read_line(L, f, 1);
      n = first+1;  /* to return 1 result */
-@@ -534,15 +550,21 @@
+@@ -534,15 +550,20 @@
      for (n = first; nargs-- && success; n++) {
        if (lua_type(L, n) == LUA_TNUMBER) {
          size_t l = (size_t)luaL_checkinteger(L, n);
-+#ifndef _KERNEL
-         success = (l == 0) ? test_eof(L, f) : read_chars(L, f, l);
-+#else
-+        success = (l == 0) ? 1 : read_chars(L, f, l);
++#ifdef _KERNEL
++#define test_eof(L, f)	1
 +#endif
+         success = (l == 0) ? test_eof(L, f) : read_chars(L, f, l);
        }
        else {
          const char *p = luaL_checkstring(L, n);
@@ -352,27 +329,11 @@ diff -u -r1.5 liolib.c
            case 'n':  /* number */
              success = read_number(L, f);
              break;
-+#endif
++#endif 
            case 'l':  /* line */
              success = read_line(L, f, 1);
              break;
-@@ -579,6 +601,7 @@
- }
- 
- 
-+#ifndef _KERNEL
- static int io_readline (lua_State *L) {
-   LStream *p = (LStream *)lua_touserdata(L, lua_upvalueindex(1));
-   int i;
-@@ -606,6 +629,7 @@
-     return 0;
-   }
- }
-+#endif
- 
- /* }====================================================== */
- 
-@@ -615,11 +639,13 @@
+@@ -615,11 +636,13 @@
    int status = 1;
    for (; nargs--; arg++) {
      if (lua_type(L, arg) == LUA_TNUMBER) {
@@ -386,7 +347,7 @@ diff -u -r1.5 liolib.c
      }
      else {
        size_t l;
-@@ -644,6 +670,7 @@
+@@ -644,6 +667,7 @@
  }
  
  
@@ -394,7 +355,7 @@ diff -u -r1.5 liolib.c
  static int f_seek (lua_State *L) {
    static const int mode[] = {SEEK_SET, SEEK_CUR, SEEK_END};
    static const char *const modenames[] = {"set", "cur", "end", NULL};
-@@ -683,6 +710,7 @@
+@@ -683,6 +707,7 @@
  static int f_flush (lua_State *L) {
    return luaL_fileresult(L, fflush(tofile(L)) == 0, NULL);
  }
@@ -402,7 +363,7 @@ diff -u -r1.5 liolib.c
  
  
  /*
-@@ -690,15 +718,23 @@
+@@ -690,15 +715,23 @@
  */
  static const luaL_Reg iolib[] = {
    {"close", io_close},
@@ -426,7 +387,7 @@ diff -u -r1.5 liolib.c
    {"write", io_write},
    {NULL, NULL}
  };
-@@ -709,11 +745,15 @@
+@@ -709,11 +742,15 @@
  */
  static const luaL_Reg flib[] = {
    {"close", io_close},
@@ -442,7 +403,7 @@ diff -u -r1.5 liolib.c
    {"write", f_write},
    {"__gc", f_gc},
    {"__tostring", f_tostring},
-@@ -742,6 +782,7 @@
+@@ -742,6 +779,7 @@
  }
  
  
@@ -450,7 +411,7 @@ diff -u -r1.5 liolib.c
  static void createstdfile (lua_State *L, FILE *f, const char *k,
                             const char *fname) {
    LStream *p = newprefile(L);
-@@ -753,15 +794,18 @@
+@@ -753,15 +791,18 @@
    }
    lua_setfield(L, -2, fname);  /* add file to module */
  }
@@ -475,7 +436,7 @@ RCS file: /cvsroot/src/external/mit/lua/dist/src/lmathlib.c,v
 retrieving revision 1.5
 diff -u -r1.5 lmathlib.c
 --- cvs/src/external/mit/lua/dist/src/lmathlib.c	28 Jan 2016 14:41:39 -0000	1.5
-+++ cvs/src/external/mit/lua/dist/src/lmathlib.c	16 Apr 2016 23:55:06 -0000
++++ cvs/src/external/mit/lua/dist/src/lmathlib.c	17 Apr 2016 19:54:35 -0000
 @@ -12,8 +12,10 @@
  #include "lprefix.h"
  
@@ -643,8 +604,8 @@ RCS file: /cvsroot/src/external/mit/lua/dist/src/loslib.c,v
 retrieving revision 1.5
 diff -u -r1.5 loslib.c
 --- cvs/src/external/mit/lua/dist/src/loslib.c	28 Jan 2016 14:41:39 -0000	1.5
-+++ cvs/src/external/mit/lua/dist/src/loslib.c	16 Apr 2016 23:55:06 -0000
-@@ -12,17 +12,36 @@
++++ cvs/src/external/mit/lua/dist/src/loslib.c	17 Apr 2016 19:54:35 -0000
+@@ -12,11 +12,17 @@
  #include "lprefix.h"
  
  
@@ -654,42 +615,23 @@ diff -u -r1.5 loslib.c
  #include <stdlib.h>
  #include <string.h>
  #include <time.h>
-+#else
++#else /* _KERNEL */
 +#include <sys/time.h>
 +#include <sys/proc.h>
-+#include <mkstemp.h>
-+#endif
++#include <ktmpnam.h>
++#endif /* _KERNEL */
  
  #include "lua.h"
  
- #include "lauxlib.h"
- #include "lualib.h"
+@@ -129,6 +135,7 @@
  
-+#ifdef _KERNEL
-+
-+#define LUA_TMPNAMTEMPLATE "/tmp/lua_XXXXXX"
-+#define LUA_TMPNAMBUFSIZE 32
-+
-+#define lua_tmpnam(b,e) { \
-+   		strcpy(b, LUA_TMPNAMTEMPLATE); \
-+		e = mkstemp(b); \
-+		if (e != -1) kclose(e); \
-+		e = (e == -1); }
-+
-+#define remove(fname) kremove(fname)
-+#endif
- 
- /*
- ** {==================================================================
-@@ -90,6 +109,7 @@
- /* }================================================================== */
  
  
 +#ifndef _KERNEL
- /*
- ** {==================================================================
- ** Configuration for 'tmpnam':
-@@ -139,6 +159,7 @@
+ static int os_execute (lua_State *L) {
+   const char *cmd = luaL_optstring(L, 1, NULL);
+   int stat = system(cmd);
+@@ -139,6 +146,7 @@
      return 1;
    }
  }
@@ -697,7 +639,7 @@ diff -u -r1.5 loslib.c
  
  
  static int os_remove (lua_State *L) {
-@@ -147,11 +168,13 @@
+@@ -147,11 +155,13 @@
  }
  
  
@@ -711,7 +653,7 @@ diff -u -r1.5 loslib.c
  
  
  static int os_tmpname (lua_State *L) {
-@@ -165,18 +188,31 @@
+@@ -165,18 +175,34 @@
  }
  
  
@@ -723,68 +665,63 @@ diff -u -r1.5 loslib.c
 +#endif
  
  
- static int os_clock (lua_State *L) {
 +#ifndef _KERNEL
+ static int os_clock (lua_State *L) {
    lua_pushnumber(L, ((lua_Number)clock())/(lua_Number)CLOCKS_PER_SEC);
-+#else
-+  struct rusage ru;
-+  long s;
-+
-+  getrusage1(curlwp->l_proc, RUSAGE_SELF, &ru);
-+  s = ru.ru_utime.tv_sec * 1000000 + ru.ru_stime.tv_sec * 1000000
-+      + ru.ru_utime.tv_usec + ru.ru_stime.tv_usec;
-+  lua_pushinteger(L, s);
-+#endif
    return 1;
  }
++#else /* _KERNEL */
++static int os_clock (lua_State *L) {
++  struct rusage ru;
++  long s;
  
++  getrusage1(curlwp->l_proc, RUSAGE_SELF, &ru);
++  s = ru.ru_utime.tv_sec + ru.ru_stime.tv_sec + 
++      ru.ru_utime.tv_usec / 1000000 + ru.ru_stime.tv_usec / 1000000;
  
++  lua_pushinteger(L, s);
++  return 1;
++}
++#endif /* _KERNEL */
++
 +#ifndef _KERNEL
  /*
  ** {======================================================
  ** Time/Date operations
-@@ -303,12 +339,24 @@
+@@ -303,8 +329,10 @@
    }
    return 1;
  }
 +#endif
  
  
++#ifndef _KERNEL
  static int os_time (lua_State *L) {
    time_t t;
-+#ifdef _KERNEL
-+  struct bintime bt;
-+#endif
    if (lua_isnoneornil(L, 1))  /* called without args? */
-+#ifndef _KERNEL
-     t = time(NULL);  /* get current time */
-+#else
-+{
-+    bintime(&bt);
-+    t = bt.sec;
-+}
-+#endif
-+#ifndef _KERNEL
-   else {
-     struct tm ts;
-     luaL_checktype(L, 1, LUA_TTABLE);
-@@ -322,6 +370,7 @@
-     ts.tm_isdst = getboolfield(L, "isdst");
-     t = mktime(&ts);
-   }
-+#endif
-   if (t != (time_t)(l_timet)t || t == (time_t)(-1))
-     luaL_error(L, "time result cannot be represented in this installation");
+@@ -327,8 +355,20 @@
    l_pushtime(L, t);
-@@ -329,6 +378,7 @@
+   return 1;
  }
++#else /* _KERNEL */
++static int os_time(lua_State *L) {
++  time_t t;
++  struct bintime bt;
++  bintime(&bt);
++  t = bt.sec;
++  if (t != (time_t)(l_timet)t || t == (time_t)(-1))
++    luaL_error(L, "time result cannot be represented in this installation");
++  l_pushtime(L, t);
++  return 1;
++}
++#endif /* _KERNEL */
  
- 
+-
 +#ifndef _KERNEL
  static int os_difftime (lua_State *L) {
    time_t t1 = l_checktime(L, 1);
    time_t t2 = l_checktime(L, 2);
-@@ -362,18 +412,23 @@
+@@ -362,18 +402,23 @@
    if (L) exit(status);  /* 'if' to avoid warnings for unreachable 'return' */
    return 0;
  }
@@ -814,8 +751,8 @@ RCS file: /cvsroot/src/external/mit/lua/dist/src/luaconf.h,v
 retrieving revision 1.16
 diff -u -r1.16 luaconf.h
 --- cvs/src/external/mit/lua/dist/src/luaconf.h	28 Jan 2016 14:41:39 -0000	1.16
-+++ cvs/src/external/mit/lua/dist/src/luaconf.h	16 Apr 2016 23:55:06 -0000
-@@ -822,6 +822,26 @@
++++ cvs/src/external/mit/lua/dist/src/luaconf.h	17 Apr 2016 19:54:35 -0000
+@@ -822,6 +822,33 @@
  #define lua_writestring(s,l)	printf("%s", (s))
  #define lua_writeline()		printf("\n")
  
@@ -826,8 +763,9 @@ diff -u -r1.16 luaconf.h
 +
 +#define FILE KFILE
 +
-+#include <iolib.h>
++#include <kio.h>
 +
++#define remove(path)		kremove(path)
 +#define fopen(path, mode)	kfopen(path, mode)
 +#define fclose(fp)			kfclose(fp)
 +
@@ -837,7 +775,13 @@ diff -u -r1.16 luaconf.h
 +#define fwrite(buff, sz, nb, fp)	kfwrite(buff, sz * nb, fp)
 +
 +#define getc(fp)	kfgetc(fp)
-+#define l_getc(fp)	getc(fp)
++
++#define L_tmpnam	1024
++#define tmpnam(nam)	ktmpnam(nam)
++
++#define stdin	NULL
++#define stdout	NULL
++#define stderr	NULL
 +
  /* string.h */
  #define strcoll strcmp
