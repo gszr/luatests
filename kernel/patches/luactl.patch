@@ -4,7 +4,7 @@ RCS file: /cvsroot/src/sys/sys/lua.h,v
 retrieving revision 1.8
 diff -u -r1.8 lua.h
 --- sys/sys/lua.h	6 Sep 2015 06:01:02 -0000	1.8
-+++ sys/sys/lua.h	18 Apr 2016 16:46:11 -0000
++++ sys/sys/lua.h	18 Apr 2016 16:55:09 -0000
 @@ -64,6 +64,7 @@
  struct lua_require {
  	char	state[MAX_LUA_NAME];
@@ -19,7 +19,7 @@ RCS file: /cvsroot/src/sys/modules/lua/lua.c,v
 retrieving revision 1.16
 diff -u -r1.16 lua.c
 --- sys/modules/lua/lua.c	7 Feb 2015 04:09:13 -0000	1.16
-+++ sys/modules/lua/lua.c	18 Apr 2016 16:46:11 -0000
++++ sys/modules/lua/lua.c	18 Apr 2016 16:55:09 -0000
 @@ -49,6 +49,7 @@
  #include <sys/cpu.h>
  
@@ -51,14 +51,11 @@ RCS file: /cvsroot/src/sbin/luactl/luactl.8,v
 retrieving revision 1.4
 diff -u -r1.4 luactl.8
 --- sbin/luactl/luactl.8	17 Oct 2013 09:44:22 -0000	1.4
-+++ sbin/luactl/luactl.8	18 Apr 2016 16:46:11 -0000
-@@ -39,7 +39,12 @@
- .Nm
++++ sbin/luactl/luactl.8	18 Apr 2016 16:55:09 -0000
+@@ -40,6 +40,10 @@
  .Op Fl cq
  .Cm require
--.Ar name module
-+.Ar name 
-+.Op module
+ .Ar name module
 +.Nm
 +.Op Fl s
 +.Cm " require"
@@ -66,15 +63,7 @@ diff -u -r1.4 luactl.8
  .Sh DESCRIPTION
  The
  .Nm
-@@ -95,14 +100,20 @@
- .Ar name .
- Note that the path name must contain at least one path separation character
- .Pq Sq / .
--.It Cm require Ar name module
-+.It Cm require Ar name Op module
- Let the Lua state
- .Ar name
- use the bindings provided in module
+@@ -102,7 +106,13 @@
  .Ar module .
  This is the equivalent of userland Lua code calling the
  .Sq require
@@ -95,7 +84,7 @@ RCS file: /cvsroot/src/sbin/luactl/luactl.c,v
 retrieving revision 1.2
 diff -u -r1.2 luactl.c
 --- sbin/luactl/luactl.c	29 Oct 2013 16:11:15 -0000	1.2
-+++ sbin/luactl/luactl.c	18 Apr 2016 16:46:11 -0000
++++ sbin/luactl/luactl.c	18 Apr 2016 16:55:09 -0000
 @@ -50,6 +50,7 @@
  int devfd = -1;
  int quiet = 0;
