@@ -9,7 +9,7 @@ fi
 
 sudo modload lua
 
-sudo sysctl -w kern.lua.verbose=1
-sudo sysctl -w ddb.onpanic=1
+sudo sysctl -w kern.lua.verbose=1 1> /dev/null
+sudo sysctl -w ddb.onpanic=1 1> /dev/null
 
-sudo luactl -cs require $1
+luactl -cs require $1
