@@ -12,9 +12,8 @@ char*
 ktmpnam(char *tmp)
 {
 	long  rnd;
-	char  *s;
+	char  ch, *s;
 	int   fd;
-	int   i;
 
 	s   = tmp;
 	rnd = random();
@@ -29,13 +28,14 @@ ktmpnam(char *tmp)
 	}
 	s++;
 
-	i = 'a';
+	ch = 'a';
 	while ((fd_open(tmp, O_CREAT|O_EXCL|O_RDWR, ALLPERMS, &fd)) != 0) {
-		if (i == 'z')
+		if (ch == 'z')
 			return NULL;
-		*s = i++;
+		*s = ch++;
 	}
-	fd_close(fd);
+	if (fd_getfile(fd) != NULL)
+		fd_close(fd);
 
 	return tmp;
 }

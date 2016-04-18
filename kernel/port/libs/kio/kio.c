@@ -24,8 +24,10 @@ kfclose(KFILE *fp)
 {
 	int ret = 0;
 
-	if (fd_getfile(fp->fd) != NULL)
-		ret = fd_close(fp->fd);
+	if (fd_getfile(fp->fd) != NULL) {
+		fd_putfile(fp->fd);
+		ret  = fd_close(fp->fd);
+	}
 
 	kern_free(fp);
 
@@ -49,7 +51,7 @@ kfopen(const char *path, const char *mode)
 	else if (*mode == 'w')
 		omode = FWRITE | O_CREAT;
 	else if (*mode == 'a')
-		omode = FWRITE | FREAD;
+		omode = FWRITE | FREAD | O_CREAT;
 	else
 		return NULL;
 
@@ -71,7 +73,7 @@ kfgetc(KFILE *fp)
 	if (!fp)
 		return -1;
 
-	return kfread(&ch, 1, fp);
+	return kfread(&ch, 1, fp) != 0 ? ch : -1;
 }
 
 int
@@ -144,7 +146,6 @@ dofileread_(int fd, struct file *fp, void *buf, size_t nbyte, off_t *offset,
 	ktrgenio(fd, UIO_READ, buf, cnt, error);
 	*retval = cnt;
  out:
-	//fd_putfile(fd);
 	return (error);
 } 
 
@@ -191,6 +192,5 @@ dofilewrite_(int fd, struct file *fp, const void *buf,
 	ktrgenio(fd, UIO_WRITE, buf, cnt, error);
 	*retval = cnt;
  out:
-	//fd_putfile(fd);
 	return (error);
 }
