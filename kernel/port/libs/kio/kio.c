@@ -14,7 +14,7 @@
 
 // Both functions below were copied from the NetBSD tree; the only change is
 // that uio_vmspace is set to kernel space
-static int dofilewrite_(int, struct file *, const void *, size_t, off_t *, int, 
+static int dofilewrite_(int, struct file *, const void *, size_t, off_t *, int,
                         register_t *);
 static int dofileread_(int, struct file *, void *, size_t, off_t *, int,
                         register_t *);
@@ -47,16 +47,15 @@ kfopen(const char *path, const char *mode)
 
 	//TODO :'(
 	if (*mode == 'r')
-		omode = FREAD;
+		omode = O_RDONLY;
 	else if (*mode == 'w')
-		omode = FWRITE | O_CREAT;
+		omode = O_WRONLY | O_CREAT;
 	else if (*mode == 'a')
-		omode = FWRITE | FREAD | O_CREAT;
+		omode = O_RDWR | O_CREAT;
 	else
 		return NULL;
 
-	//XXX replace ALLPERMS to something appropriate?
-	if ((err = fd_open(path, omode, ALLPERMS, &fp->fd)) != 0)
+	if ((err = fd_open(path, omode, S_IRWXU, &fp->fd)) != 0)
 		return NULL;
 
 	fp->f = fd_getfile(fp->fd);
@@ -101,8 +100,9 @@ kfread(void *buf, size_t nbyte, KFILE *fp)
 {
 	size_t nread = 0;
 
-//	if ((fp->f->f_flag & FREAD) == 0)
-//		return 0;
+	if ((fp->f->f_flag & FREAD) == 0)
+		return 0;
+
 
 	dofileread_(fp->fd, fp->f, buf, nbyte, &fp->f->f_offset,
                        FOF_UPDATE_OFFSET, &nread);
