@@ -1,0 +1,165 @@
+? sbin/luactl/.gdbinit
+? sbin/luactl/luactl
+? sbin/luactl/luactl.html8
+Index: sys/sys/lua.h
+===================================================================
+RCS file: /cvsroot/src/sys/sys/lua.h,v
+retrieving revision 1.8
+diff -u -r1.8 lua.h
+--- sys/sys/lua.h	6 Sep 2015 06:01:02 -0000	1.8
++++ sys/sys/lua.h	18 Apr 2016 16:35:32 -0000
+@@ -64,6 +64,7 @@
+ struct lua_require {
+ 	char	state[MAX_LUA_NAME];
+ 	char	module[LUA_MAX_MODNAME];
++	bool	stdlibs;
+ };
+ 
+ struct lua_load {
+Index: sys/modules/lua/lua.c
+===================================================================
+RCS file: /cvsroot/src/sys/modules/lua/lua.c,v
+retrieving revision 1.16
+diff -u -r1.16 lua.c
+--- sys/modules/lua/lua.c	7 Feb 2015 04:09:13 -0000	1.16
++++ sys/modules/lua/lua.c	18 Apr 2016 16:35:32 -0000
+@@ -49,6 +49,7 @@
+ #include <sys/cpu.h>
+ 
+ #include <lauxlib.h>
++#include <lualib.h>
+ 
+ #include "luavar.h"
+ 
+@@ -356,6 +357,16 @@
+ 		require = data;
+ 		LIST_FOREACH(s, &lua_states, lua_next)
+ 			if (!strcmp(s->lua_name, require->state))
++				if (require->stdlibs) {
++					klua_lock(s->K);
++					luaL_openlibs(s->K->L);
++					klua_unlock(s->K);
++					if (lua_verbose)
++						device_printf(sc->sc_dev, 
++							"requiring standard libraries to state %s\n", 
++							s->lua_name);
++					return 0;
++				}
+ 				LIST_FOREACH(m, &lua_modules, mod_next)
+ 					if (!strcmp(m->mod_name,
+ 					    require->module)) {
+Index: sbin/luactl/luactl.8
+===================================================================
+RCS file: /cvsroot/src/sbin/luactl/luactl.8,v
+retrieving revision 1.4
+diff -u -r1.4 luactl.8
+--- sbin/luactl/luactl.8	17 Oct 2013 09:44:22 -0000	1.4
++++ sbin/luactl/luactl.8	18 Apr 2016 16:35:32 -0000
+@@ -39,7 +39,12 @@
+ .Nm
+ .Op Fl cq
+ .Cm require
+-.Ar name module
++.Ar name 
++.Op module
++.Nm
++.Op Fl s
++.Cm " require"
++.Ar name 
+ .Sh DESCRIPTION
+ The
+ .Nm
+@@ -95,14 +100,20 @@
+ .Ar name .
+ Note that the path name must contain at least one path separation character
+ .Pq Sq / .
+-.It Cm require Ar name module
++.It Cm require Ar name Op module
+ Let the Lua state
+ .Ar name
+ use the bindings provided in module
+ .Ar module .
+ This is the equivalent of userland Lua code calling the
+ .Sq require
+-function.
++function. If 
++.Fl s 
++is specified, Lua standard libraries are opened in
++.Ar name
++and
++.Ar module
++is optional
+ .El
+ .Sh FILES
+ .Bl -tag -width "/dev/lua" -compact
+Index: sbin/luactl/luactl.c
+===================================================================
+RCS file: /cvsroot/src/sbin/luactl/luactl.c,v
+retrieving revision 1.2
+diff -u -r1.2 luactl.c
+--- sbin/luactl/luactl.c	29 Oct 2013 16:11:15 -0000	1.2
++++ sbin/luactl/luactl.c	18 Apr 2016 16:35:32 -0000
+@@ -50,6 +50,7 @@
+ int devfd = -1;
+ int quiet = 0;
+ int docreate = 0;
++int stdlibs = 0;
+ 
+ static void getinfo(void);
+ static void create(char *, char *);
+@@ -67,7 +68,7 @@
+ {
+ 	int ch;
+ 
+-	while ((ch = getopt(argc, argv, "cq")) != -1)
++	while ((ch = getopt(argc, argv, "cqs")) != -1)
+ 		switch (ch) {
+ 		case 'c':
+ 			docreate = 1;
+@@ -75,6 +76,9 @@
+ 		case 'q':
+ 			quiet = 1;
+ 			break;
++		case 's':
++			stdlibs = 1;
++			break;
+ 		default:
+ 			usage();
+ 			/* NOTREACHED */
+@@ -99,11 +103,14 @@
+ 			usage();
+ 		destroy(argv[1]);
+ 	} else if (!strcmp(argv[0], "require")) {
+-		if (argc != 3)
++		if (argc != 3 && !stdlibs)
+ 			usage();
+ 		if (docreate)
+ 			create(argv[1], NULL);
+-		require(argv[1], argv[2]);
++		if (stdlibs)
++			require(argv[1], NULL);
++		else
++			require(argv[1], argv[2]);
+ 	} else if (!strcmp(argv[0], "load")) {
+ 		if (argc != 3)
+ 			usage();
+@@ -186,7 +193,10 @@
+ 	struct lua_require r;
+ 
+ 	strlcpy(r.state, name, sizeof(r.state));
+-	strlcpy(r.module, module, sizeof(r.module));
++	if (stdlibs)
++		r.stdlibs = true;
++	else
++		strlcpy(r.module, module, sizeof(r.module));
+ 
+ 	if (ioctl(devfd, LUAREQUIRE, &r) == -1)
+ 		err(EXIT_FAILURE, "LUAREQUIRE");
+@@ -224,6 +234,7 @@
+ 	fprintf(stderr, "       %s [-cq] create name [desc]\n", p);
+ 	fprintf(stderr, "       %s [-cq] destroy name\n", p);
+ 	fprintf(stderr, "       %s [-cq] require name module\n", p);
++	fprintf(stderr, "       %s [ -s] require name\n", p);
+ 	fprintf(stderr, "       %s [-cq] load name path\n", p);
+ 
+ 	exit(EXIT_FAILURE);
