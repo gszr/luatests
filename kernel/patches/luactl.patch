@@ -1,25 +1,10 @@
-Index: sys/sys/lua.h
-===================================================================
-RCS file: /cvsroot/src/sys/sys/lua.h,v
-retrieving revision 1.8
-diff -u -r1.8 lua.h
---- sys/sys/lua.h	6 Sep 2015 06:01:02 -0000	1.8
-+++ sys/sys/lua.h	18 Apr 2016 16:55:09 -0000
-@@ -64,6 +64,7 @@
- struct lua_require {
- 	char	state[MAX_LUA_NAME];
- 	char	module[LUA_MAX_MODNAME];
-+	bool	stdlibs;
- };
- 
- struct lua_load {
 Index: sys/modules/lua/lua.c
 ===================================================================
 RCS file: /cvsroot/src/sys/modules/lua/lua.c,v
 retrieving revision 1.16
 diff -u -r1.16 lua.c
 --- sys/modules/lua/lua.c	7 Feb 2015 04:09:13 -0000	1.16
-+++ sys/modules/lua/lua.c	18 Apr 2016 16:55:09 -0000
++++ sys/modules/lua/lua.c	19 Apr 2016 16:08:34 -0000
 @@ -49,6 +49,7 @@
  #include <sys/cpu.h>
  
@@ -28,53 +13,77 @@ diff -u -r1.16 lua.c
  
  #include "luavar.h"
  
-@@ -356,6 +357,16 @@
+@@ -355,7 +356,17 @@
+ 	case LUAREQUIRE:	/* 'require' a module in a State */
  		require = data;
  		LIST_FOREACH(s, &lua_states, lua_next)
- 			if (!strcmp(s->lua_name, require->state))
+-			if (!strcmp(s->lua_name, require->state))
++			if (!strcmp(s->lua_name, require->state)) {
 +				if (require->stdlibs) {
++					if (lua_verbose)
++						device_printf(sc->sc_dev, 
++						"requiring standard libraries to state %s\n",
++						s->lua_name);
 +					klua_lock(s->K);
 +					luaL_openlibs(s->K->L);
 +					klua_unlock(s->K);
-+					if (lua_verbose)
-+						device_printf(sc->sc_dev, 
-+							"requiring standard libraries to state %s\n", 
-+							s->lua_name);
 +					return 0;
 +				}
  				LIST_FOREACH(m, &lua_modules, mod_next)
  					if (!strcmp(m->mod_name,
  					    require->module)) {
+@@ -379,6 +390,7 @@
+ 					    	    mod_next);
+ 					    	return 0;
+ 					}
++			}
+ 		return ENXIO;
+ 	case LUALOAD:
+ 		load = data;
+Index: sys/sys/lua.h
+===================================================================
+RCS file: /cvsroot/src/sys/sys/lua.h,v
+retrieving revision 1.8
+diff -u -r1.8 lua.h
+--- sys/sys/lua.h	6 Sep 2015 06:01:02 -0000	1.8
++++ sys/sys/lua.h	19 Apr 2016 16:08:34 -0000
+@@ -64,6 +64,7 @@
+ struct lua_require {
+ 	char	state[MAX_LUA_NAME];
+ 	char	module[LUA_MAX_MODNAME];
++	bool	stdlibs;
+ };
+ 
+ struct lua_load {
 Index: sbin/luactl/luactl.8
 ===================================================================
 RCS file: /cvsroot/src/sbin/luactl/luactl.8,v
 retrieving revision 1.4
 diff -u -r1.4 luactl.8
 --- sbin/luactl/luactl.8	17 Oct 2013 09:44:22 -0000	1.4
-+++ sbin/luactl/luactl.8	18 Apr 2016 16:55:09 -0000
++++ sbin/luactl/luactl.8	19 Apr 2016 16:08:34 -0000
 @@ -40,6 +40,10 @@
  .Op Fl cq
  .Cm require
  .Ar name module
 +.Nm
-+.Op Fl s
-+.Cm " require"
-+.Ar name 
++.Op "" Fl s
++.Cm require
++.Ar name
  .Sh DESCRIPTION
  The
  .Nm
-@@ -102,7 +106,13 @@
- .Ar module .
+@@ -103,6 +107,13 @@
  This is the equivalent of userland Lua code calling the
  .Sq require
--function.
-+function. If 
-+.Fl s 
-+is specified, Lua standard libraries are opened in
-+.Ar name
-+and
+ function.
++.Fl s
++causes
++.Nm
++to open Lua standard libraries into the Lua state
++.Ar name ;
 +.Ar module
-+is optional
++is thus optional.
  .El
  .Sh FILES
  .Bl -tag -width "/dev/lua" -compact
@@ -84,12 +93,12 @@ RCS file: /cvsroot/src/sbin/luactl/luactl.c,v
 retrieving revision 1.2
 diff -u -r1.2 luactl.c
 --- sbin/luactl/luactl.c	29 Oct 2013 16:11:15 -0000	1.2
-+++ sbin/luactl/luactl.c	18 Apr 2016 16:55:09 -0000
++++ sbin/luactl/luactl.c	19 Apr 2016 16:08:34 -0000
 @@ -50,6 +50,7 @@
  int devfd = -1;
  int quiet = 0;
  int docreate = 0;
-+int stdlibs = 0;
++bool stdlibs = false;
  
  static void getinfo(void);
  static void create(char *, char *);
@@ -107,7 +116,7 @@ diff -u -r1.2 luactl.c
  			quiet = 1;
  			break;
 +		case 's':
-+			stdlibs = 1;
++			stdlibs = true;
 +			break;
  		default:
  			usage();
@@ -129,19 +138,35 @@ diff -u -r1.2 luactl.c
  	} else if (!strcmp(argv[0], "load")) {
  		if (argc != 3)
  			usage();
-@@ -186,7 +193,10 @@
- 	struct lua_require r;
+@@ -183,10 +190,13 @@
+ static void
+ require(char *name, char *module)
+ {
+-	struct lua_require r;
++	struct lua_require r = {
++		.stdlibs = stdlibs
++	};
  
  	strlcpy(r.state, name, sizeof(r.state));
 -	strlcpy(r.module, module, sizeof(r.module));
-+	if (stdlibs)
-+		r.stdlibs = true;
-+	else
++	if (!stdlibs)
 +		strlcpy(r.module, module, sizeof(r.module));
  
  	if (ioctl(devfd, LUAREQUIRE, &r) == -1)
  		err(EXIT_FAILURE, "LUAREQUIRE");
-@@ -224,6 +234,7 @@
+@@ -194,7 +204,10 @@
+ 	if (quiet)
+ 		return;
+ 
+-	printf("%s required by %s\n", module, name);
++	if (stdlibs)
++		printf("standard libraries required by %s\n", name);
++	else
++		printf("%s required by %s\n", module, name);
+ }
+ 
+ static void
+@@ -224,6 +237,7 @@
  	fprintf(stderr, "       %s [-cq] create name [desc]\n", p);
  	fprintf(stderr, "       %s [-cq] destroy name\n", p);
  	fprintf(stderr, "       %s [-cq] require name module\n", p);
