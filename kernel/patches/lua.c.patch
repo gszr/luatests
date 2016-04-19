@@ -1,0 +1,17 @@
+Index: sys/modules/lua/lua.c
+===================================================================
+RCS file: /cvsroot/src/sys/modules/lua/lua.c,v
+retrieving revision 1.16
+diff -u -r1.16 lua.c
+--- sys/modules/lua/lua.c	7 Feb 2015 04:09:13 -0000	1.16
++++ sys/modules/lua/lua.c	19 Apr 2016 16:34:04 -0000
+@@ -356,6 +356,9 @@
+ 		require = data;
+ 		LIST_FOREACH(s, &lua_states, lua_next)
+ 			if (!strcmp(s->lua_name, require->state))
++				LIST_FOREACH(m, &s->lua_modules, mod_next)
++					if (!strcmp(m->mod_name, require->module))
++						return ENXIO;
+ 				LIST_FOREACH(m, &lua_modules, mod_next)
+ 					if (!strcmp(m->mod_name,
+ 					    require->module)) {
