@@ -1,10 +1,10 @@
-Index: cvs/src/external/mit/lua/dist/src/lauxlib.c
+Index: external/mit/lua/dist/src/lauxlib.c
 ===================================================================
 RCS file: /cvsroot/src/external/mit/lua/dist/src/lauxlib.c,v
 retrieving revision 1.6
 diff -u -r1.6 lauxlib.c
---- cvs/src/external/mit/lua/dist/src/lauxlib.c	28 Jan 2016 14:41:39 -0000	1.6
-+++ cvs/src/external/mit/lua/dist/src/lauxlib.c	18 Apr 2016 01:00:50 -0000
+--- external/mit/lua/dist/src/lauxlib.c	28 Jan 2016 14:41:39 -0000	1.6
++++ external/mit/lua/dist/src/lauxlib.c	20 Apr 2016 01:48:14 -0000
 @@ -228,7 +228,6 @@
  }
  
@@ -77,13 +77,13 @@ diff -u -r1.6 lauxlib.c
  
  
  typedef struct LoadS {
-Index: cvs/src/external/mit/lua/dist/src/lauxlib.h
+Index: external/mit/lua/dist/src/lauxlib.h
 ===================================================================
 RCS file: /cvsroot/src/external/mit/lua/dist/src/lauxlib.h,v
 retrieving revision 1.4
 diff -u -r1.4 lauxlib.h
---- cvs/src/external/mit/lua/dist/src/lauxlib.h	28 Jan 2016 14:41:39 -0000	1.4
-+++ cvs/src/external/mit/lua/dist/src/lauxlib.h	18 Apr 2016 01:00:50 -0000
+--- external/mit/lua/dist/src/lauxlib.h	28 Jan 2016 14:41:39 -0000	1.4
++++ external/mit/lua/dist/src/lauxlib.h	20 Apr 2016 01:48:14 -0000
 @@ -71,10 +71,8 @@
  LUALIB_API int (luaL_checkoption) (lua_State *L, int arg, const char *def,
                                     const char *const lst[]);
@@ -135,13 +135,13 @@ diff -u -r1.4 lauxlib.h
  
  
  
-Index: cvs/src/external/mit/lua/dist/src/lbaselib.c
+Index: external/mit/lua/dist/src/lbaselib.c
 ===================================================================
 RCS file: /cvsroot/src/external/mit/lua/dist/src/lbaselib.c,v
 retrieving revision 1.6
 diff -u -r1.6 lbaselib.c
---- cvs/src/external/mit/lua/dist/src/lbaselib.c	28 Jan 2016 14:41:39 -0000	1.6
-+++ cvs/src/external/mit/lua/dist/src/lbaselib.c	18 Apr 2016 01:00:50 -0000
+--- external/mit/lua/dist/src/lbaselib.c	28 Jan 2016 14:41:39 -0000	1.6
++++ external/mit/lua/dist/src/lbaselib.c	20 Apr 2016 01:48:14 -0000
 @@ -289,7 +289,6 @@
  }
  
@@ -211,13 +211,13 @@ diff -u -r1.6 lbaselib.c
    return 1;
  }
  
-Index: cvs/src/external/mit/lua/dist/src/linit.c
+Index: external/mit/lua/dist/src/linit.c
 ===================================================================
 RCS file: /cvsroot/src/external/mit/lua/dist/src/linit.c,v
 retrieving revision 1.5
 diff -u -r1.5 linit.c
---- cvs/src/external/mit/lua/dist/src/linit.c	28 Jan 2016 14:41:39 -0000	1.5
-+++ cvs/src/external/mit/lua/dist/src/linit.c	18 Apr 2016 01:00:50 -0000
+--- external/mit/lua/dist/src/linit.c	28 Jan 2016 14:41:39 -0000	1.5
++++ external/mit/lua/dist/src/linit.c	20 Apr 2016 01:48:14 -0000
 @@ -50,14 +50,10 @@
  #endif /* _KERNEL */
    {LUA_COLIBNAME, luaopen_coroutine},
@@ -233,13 +233,13 @@ diff -u -r1.5 linit.c
    {LUA_UTF8LIBNAME, luaopen_utf8},
    {LUA_DBLIBNAME, luaopen_debug},
  #if defined(LUA_COMPAT_BITLIB)
-Index: cvs/src/external/mit/lua/dist/src/liolib.c
+Index: external/mit/lua/dist/src/liolib.c
 ===================================================================
 RCS file: /cvsroot/src/external/mit/lua/dist/src/liolib.c,v
 retrieving revision 1.5
 diff -u -r1.5 liolib.c
---- cvs/src/external/mit/lua/dist/src/liolib.c	28 Jan 2016 14:41:39 -0000	1.5
-+++ cvs/src/external/mit/lua/dist/src/liolib.c	18 Apr 2016 01:00:50 -0000
+--- external/mit/lua/dist/src/liolib.c	28 Jan 2016 14:41:39 -0000	1.5
++++ external/mit/lua/dist/src/liolib.c	20 Apr 2016 01:48:14 -0000
 @@ -12,12 +12,14 @@
  #include "lprefix.h"
  
@@ -451,13 +451,13 @@ diff -u -r1.5 liolib.c
    return 1;
  }
  
-Index: cvs/src/external/mit/lua/dist/src/lmathlib.c
+Index: external/mit/lua/dist/src/lmathlib.c
 ===================================================================
 RCS file: /cvsroot/src/external/mit/lua/dist/src/lmathlib.c,v
 retrieving revision 1.5
 diff -u -r1.5 lmathlib.c
---- cvs/src/external/mit/lua/dist/src/lmathlib.c	28 Jan 2016 14:41:39 -0000	1.5
-+++ cvs/src/external/mit/lua/dist/src/lmathlib.c	18 Apr 2016 01:00:50 -0000
+--- external/mit/lua/dist/src/lmathlib.c	28 Jan 2016 14:41:39 -0000	1.5
++++ external/mit/lua/dist/src/lmathlib.c	20 Apr 2016 01:48:14 -0000
 @@ -12,8 +12,10 @@
  #include "lprefix.h"
  
@@ -469,33 +469,27 @@ diff -u -r1.5 lmathlib.c
  
  #include "lua.h"
  
-@@ -21,6 +23,7 @@
+@@ -21,8 +23,10 @@
  #include "lualib.h"
  
  
 +#ifndef _KERNEL
  #undef PI
  #define PI	(l_mathop(3.141592653589793238462643383279502884))
++#endif
  
-@@ -37,7 +40,17 @@
- #endif
+ 
+ #if !defined(l_rand)		/* { */
+@@ -38,6 +42,8 @@
  #endif				/* } */
  
-+#else // _KERNEL
-+#define HUGE_VAL (lua_Number)__builtin_huge_val()
-+#define l_rand()   random()
-+#ifndef srandom
-+#define srandom(x) ;
-+#endif
-+#define l_srand(x) srandom(x)
-+#endif
  
 +
 +#ifndef _KERNEL
  static int math_abs (lua_State *L) {
    if (lua_isinteger(L, 1)) {
      lua_Integer n = lua_tointeger(L, 1);
-@@ -125,6 +138,7 @@
+@@ -125,6 +131,7 @@
    return 1;
  }
  
@@ -503,7 +497,7 @@ diff -u -r1.5 lmathlib.c
  
  static int math_fmod (lua_State *L) {
    if (lua_isinteger(L, 1) && lua_isinteger(L, 2)) {
-@@ -136,13 +150,16 @@
+@@ -136,13 +143,16 @@
      else
        lua_pushinteger(L, lua_tointeger(L, 1) % d);
    }
@@ -520,7 +514,7 @@ diff -u -r1.5 lmathlib.c
  /*
  ** next function does not use 'modf', avoiding problems with 'double*'
  ** (which is not compatible with 'float*') when lua_Number is not
-@@ -209,6 +226,7 @@
+@@ -209,6 +219,7 @@
    lua_pushnumber(L, luaL_checknumber(L, 1) * (PI / l_mathop(180.0)));
    return 1;
  }
@@ -528,7 +522,7 @@ diff -u -r1.5 lmathlib.c
  
  
  static int math_min (lua_State *L) {
-@@ -245,7 +263,11 @@
+@@ -245,7 +256,11 @@
  */
  static int math_random (lua_State *L) {
    lua_Integer low, up;
@@ -540,19 +534,19 @@ diff -u -r1.5 lmathlib.c
    switch (lua_gettop(L)) {  /* check number of arguments */
      case 0: {  /* no arguments */
        lua_pushnumber(L, (lua_Number)r);  /* Number between 0 and 1 */
-@@ -267,7 +289,11 @@
+@@ -267,7 +282,11 @@
    luaL_argcheck(L, low <= up, 1, "interval is empty"); 
    luaL_argcheck(L, low >= 0 || up <= LUA_MAXINTEGER + low, 1,
                     "interval too large");
 +#ifndef _KERNEL
    r *= (double)(up - low) + 1.0;
 +#else
-+  r = r + (up - low);
++  r %= (up - low) + 1;
 +#endif
    lua_pushinteger(L, (lua_Integer)r + low);
    return 1;
  }
-@@ -295,6 +321,7 @@
+@@ -295,6 +314,7 @@
  }
  
  
@@ -560,7 +554,7 @@ diff -u -r1.5 lmathlib.c
  /*
  ** {==================================================================
  ** Deprecated functions (for compatibility only)
-@@ -346,9 +373,11 @@
+@@ -346,9 +366,11 @@
  #endif
  /* }================================================================== */
  
@@ -572,7 +566,7 @@ diff -u -r1.5 lmathlib.c
    {"abs",   math_abs},
    {"acos",  math_acos},
    {"asin",  math_asin},
-@@ -359,19 +388,27 @@
+@@ -359,19 +381,27 @@
    {"exp",   math_exp},
    {"tointeger", math_toint},
    {"floor", math_floor},
@@ -600,15 +594,15 @@ diff -u -r1.5 lmathlib.c
  #if defined(LUA_COMPAT_MATHLIB)
    {"atan2", math_atan},
    {"cosh",   math_cosh},
-@@ -385,6 +422,7 @@
+@@ -384,6 +414,7 @@
+ #endif
    /* placeholders */
    {"pi", NULL},
-   {"huge", NULL},
 +#endif
+   {"huge", NULL},
    {"maxinteger", NULL},
    {"mininteger", NULL},
-   {NULL, NULL}
-@@ -396,8 +434,10 @@
+@@ -396,8 +427,10 @@
  */
  LUAMOD_API int luaopen_math (lua_State *L) {
    luaL_newlib(L, mathlib);
@@ -619,14 +613,14 @@ diff -u -r1.5 lmathlib.c
    lua_pushnumber(L, (lua_Number)HUGE_VAL);
    lua_setfield(L, -2, "huge");
    lua_pushinteger(L, LUA_MAXINTEGER);
-Index: cvs/src/external/mit/lua/dist/src/loslib.c
+Index: external/mit/lua/dist/src/loslib.c
 ===================================================================
 RCS file: /cvsroot/src/external/mit/lua/dist/src/loslib.c,v
 retrieving revision 1.5
 diff -u -r1.5 loslib.c
---- cvs/src/external/mit/lua/dist/src/loslib.c	28 Jan 2016 14:41:39 -0000	1.5
-+++ cvs/src/external/mit/lua/dist/src/loslib.c	18 Apr 2016 01:00:50 -0000
-@@ -12,11 +12,17 @@
+--- external/mit/lua/dist/src/loslib.c	28 Jan 2016 14:41:39 -0000	1.5
++++ external/mit/lua/dist/src/loslib.c	20 Apr 2016 01:48:15 -0000
+@@ -12,11 +12,16 @@
  #include "lprefix.h"
  
  
@@ -639,12 +633,11 @@ diff -u -r1.5 loslib.c
 +#else /* _KERNEL */
 +#include <sys/time.h>
 +#include <sys/proc.h>
-+#include <ktmpnam.h>
 +#endif /* _KERNEL */
  
  #include "lua.h"
  
-@@ -119,7 +125,13 @@
+@@ -119,7 +124,13 @@
  
  /* ISO C definitions */
  #define LUA_TMPNAMBUFSIZE	L_tmpnam
@@ -658,7 +651,7 @@ diff -u -r1.5 loslib.c
  
  #endif				/* } */
  
-@@ -129,6 +141,7 @@
+@@ -129,6 +140,7 @@
  
  
  
@@ -666,7 +659,7 @@ diff -u -r1.5 loslib.c
  static int os_execute (lua_State *L) {
    const char *cmd = luaL_optstring(L, 1, NULL);
    int stat = system(cmd);
-@@ -139,6 +152,7 @@
+@@ -139,6 +151,7 @@
      return 1;
    }
  }
@@ -674,7 +667,7 @@ diff -u -r1.5 loslib.c
  
  
  static int os_remove (lua_State *L) {
-@@ -147,11 +161,13 @@
+@@ -147,11 +160,13 @@
  }
  
  
@@ -688,7 +681,7 @@ diff -u -r1.5 loslib.c
  
  
  static int os_tmpname (lua_State *L) {
-@@ -165,18 +181,34 @@
+@@ -165,18 +180,34 @@
  }
  
  
@@ -713,17 +706,17 @@ diff -u -r1.5 loslib.c
 +  getrusage1(curlwp->l_proc, RUSAGE_SELF, &ru);
 +  s = ru.ru_utime.tv_sec + ru.ru_stime.tv_sec + 
 +      ru.ru_utime.tv_usec / 1000000 + ru.ru_stime.tv_usec / 1000000;
-+
+ 
 +  lua_pushinteger(L, s);
 +  return 1;
 +}
 +#endif /* _KERNEL */
- 
++
 +#ifndef _KERNEL
  /*
  ** {======================================================
  ** Time/Date operations
-@@ -303,8 +335,10 @@
+@@ -303,8 +334,10 @@
    }
    return 1;
  }
@@ -734,7 +727,7 @@ diff -u -r1.5 loslib.c
  static int os_time (lua_State *L) {
    time_t t;
    if (lua_isnoneornil(L, 1))  /* called without args? */
-@@ -327,8 +361,20 @@
+@@ -327,8 +360,21 @@
    l_pushtime(L, t);
    return 1;
  }
@@ -751,7 +744,7 @@ diff -u -r1.5 loslib.c
 +}
 +#endif /* _KERNEL */
  
--
+ 
 +#ifndef _KERNEL
  static int os_difftime (lua_State *L) {
    time_t t1 = l_checktime(L, 1);
@@ -780,14 +773,29 @@ diff -u -r1.5 loslib.c
    {"time",      os_time},
    {"tmpname",   os_tmpname},
    {NULL, NULL}
-Index: cvs/src/external/mit/lua/dist/src/luaconf.h
+Index: external/mit/lua/dist/src/luaconf.h
 ===================================================================
 RCS file: /cvsroot/src/external/mit/lua/dist/src/luaconf.h,v
 retrieving revision 1.16
 diff -u -r1.16 luaconf.h
---- cvs/src/external/mit/lua/dist/src/luaconf.h	28 Jan 2016 14:41:39 -0000	1.16
-+++ cvs/src/external/mit/lua/dist/src/luaconf.h	18 Apr 2016 01:00:50 -0000
-@@ -822,6 +822,34 @@
+--- external/mit/lua/dist/src/luaconf.h	28 Jan 2016 14:41:39 -0000	1.16
++++ external/mit/lua/dist/src/luaconf.h	20 Apr 2016 01:48:15 -0000
+@@ -498,6 +498,14 @@
+ #error "numeric float type not defined"
+ 
+ #endif					/* } */
++#else
++
++#include <krand.h>
++
++#define HUGE_VAL	(lua_Number) __builtin_huge_val()
++#define RAND_MAX	0x7fffffff
++#define l_rand()	krand()
++#define l_srand(s)	ksrand(s)
+ #endif /*_KERNEL */
+ 
+ 
+@@ -822,6 +830,36 @@
  #define lua_writestring(s,l)	printf("%s", (s))
  #define lua_writeline()		printf("\n")
  
@@ -810,6 +818,8 @@ diff -u -r1.16 luaconf.h
 +#define fwrite(buff, sz, nb, fp)	kfwrite(buff, sz * nb, fp)
 +
 +#define getc(fp)	kfgetc(fp)
++
++#include <ktmpnam.h>
 +
 +#define L_tmpnam	32
 +#define tmpnam(nam)	ktmpnam(nam)
