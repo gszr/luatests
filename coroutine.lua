@@ -89,6 +89,7 @@ for i=1,10 do
 end
 
 -- sieve
+_KBUG[[
 function gen (n)
   return coroutine.wrap(function ()
     for i=2,n do coroutine.yield(i) end
@@ -117,6 +118,7 @@ end
 
 assert(#a == 25 and a[#a] == 97)
 x, a = nil
+]]
 
 -- yielding across C boundaries
 
@@ -279,9 +281,11 @@ assert(a and b == 3)
 assert(coroutine.status(co1) == 'dead')
 
 -- infinite recursion of coroutines
+_KBUG[[
 a = function(a) coroutine.wrap(a)(a) end
 assert(not pcall(a, a))
 a = nil
+]]
 
 
 -- access to locals of erroneous coroutines

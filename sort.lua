@@ -287,8 +287,7 @@ print(string.format("Invert-sorting other %d elements in %.2f msec., with %i com
       limit, x, i))
 ]]
 _KSPACE[[
-print(string.format("Invert-sorting other %d elements in %d msec., with %i comparisons",
-      limit, x / 1000, i))
+print(string.format("Invert-sorting other %d elements in %d msec., with %i comparisons", limit, x / 1000, i))
 ]]
 check(a, function(x,y) return y<x end)
 

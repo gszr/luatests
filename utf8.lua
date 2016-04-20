@@ -1,5 +1,7 @@
 -- $Id: utf8.lua,v 1.11 2014/12/26 17:20:53 roberto Exp $
 
+if _KERNEL then return end
+
 print "testing UTF-8 library"
 
 local utf8 = require'utf8'

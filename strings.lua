@@ -335,6 +335,7 @@ assert(table.concat(a, ",", 2) == "b,c")
 assert(table.concat(a, ",", 3) == "c")
 assert(table.concat(a, ",", 4) == "")
 
+_USPACE[[
 if not _port then
 
   local locales = { "ptb", "ISO-8859-1", "pt_BR" }
@@ -365,6 +366,7 @@ if not _port then
   assert(os.setlocale(nil, "numeric") == 'C')
 
 end
+]]
 
 print('OK')
 

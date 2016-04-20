@@ -1,5 +1,7 @@
 -- $Id: files.lua,v 1.91 2015/10/08 15:58:59 roberto Exp $
 
+if _KERNEL then return end
+
 local debug = require "debug"
 
 local maxint = math.maxinteger
@@ -129,11 +131,15 @@ assert(f:close())
 f = assert(io.open(file, "r"))
 assert(f:read("n") == maxint)
 assert(f:read("n") == maxint)
+_USPACE[[
 assert(f:read("n") == 0xABCp-3)
+]]
 assert(f:read("n") == 0)
 assert(f:read("*n") == -maxint)            -- test old format (with '*')
 assert(f:read("n") == -maxint)
+_USPACE[[
 assert(f:read("*n") == -0xABCp-3)            -- test old format (with '*')
+]]
 assert(f:close())
 assert(os.remove(file))
 
@@ -166,13 +172,19 @@ f:write[[
 ]]
 assert(f:close())
 f = assert(io.open(file, "r"))
+_USPACE[[
 assert(f:read("n") == -12.3); assert(f:read(1) == "-")
+]]
 assert(f:read("n") == -0xffff); assert(f:read(2) == "+ ")
+_USPACE[[
 assert(f:read("n") == 0.3); assert(f:read(1) == "|")
 assert(f:read("n") == 5e-3); assert(f:read(1) == "X")
 assert(f:read("n") == 234e13); assert(f:read(1) == "E")
+]]
 assert(f:read("n") == 0Xdeadbeefdeadbeef); assert(f:read(2) == "x\n")
+_USPACE[[
 assert(f:read("n") == 0x1.13aP3); assert(f:read(1) == "e")
+]]
 
 do   -- attempt to read too long number
   assert(f:read("n") == nil)  -- fails
@@ -280,7 +292,9 @@ assert(os.remove(file))
 
 local t = '0123456789'
 for i=1,10 do t = t..t; end
+_USPACE[[
 assert(string.len(t) == 10*2^10)
+]]
 
 io.output(file)
 io.write("alo"):write("\n")
@@ -565,7 +579,9 @@ io.input(file)
 local _,a,b,c,d,e,h,__ = io.read(1, 'n', 'n', 'l', 'l', 'l', 'a', 10)
 assert(io.close(io.input()))
 assert(_ == ' ' and __ == nil)
+_USPACE[[
 assert(type(a) == 'number' and a==123.4 and b==-56e-2)
+]]
 assert(d=='second line' and e=='third line')
 assert(h==[[
 
@@ -697,8 +713,11 @@ checkerr("invalid conversion specifier", os.date, "%E")
 checkerr("invalid conversion specifier", os.date, "%Ea")
 
 checkerr("not an integer", os.time, {year=1000, month=1, day=1, hour='x'})
+_USPACE[[
 checkerr("not an integer", os.time, {year=1000, month=1, day=1, hour=1.5})
+]]
 
+_USPACE[[
 if not _port then
   -- test Posix-specific modifiers
   assert(type(os.date("%Ex")) == 'string')
@@ -730,6 +749,7 @@ if not _port then
     end
   end
 end
+]]
 
 
 -- assume that time has at least 1-second precision

@@ -222,6 +222,7 @@ checkerror("invalid capture index %%1", string.gsub, "alo", "(%1)", "a")
 checkerror("invalid use of '%%'", string.gsub, "alo", ".", "%x")
 
 -- bug since 2.5 (C-stack overflow)
+_KBUG[[
 do
   local function f (size)
     local s = string.rep("a", size)
@@ -236,6 +237,7 @@ end
 
 checkerror("too complex", string.find, "01234567890123456789",
                                        ".*.*.*.*.*.*.*.*a")
+]]
 
 if not _soft then
   -- big strings

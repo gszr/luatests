@@ -1,5 +1,9 @@
+_KBUG[[
 # testing special comment on first line
+]]
 -- $Id: main.lua,v 1.63 2015/09/08 17:16:34 roberto Exp $
+
+if _KERNEL then return end
 
 -- most (all?) tests here assume a reasonable "Unix-like" shell
 if _port then return end

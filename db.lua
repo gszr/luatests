@@ -36,9 +36,11 @@ do
   a = debug.getinfo(print, "L")
   assert(a.activelines == nil)
   local b = debug.getinfo(test, "SfL")
+_KBUG[[
   assert(b.name == nil and b.what == "Lua" and b.linedefined == 17 and
          b.lastlinedefined == b.linedefined + 10 and
          b.func == test and not string.find(b.short_src, "%["))
+]]
   assert(b.activelines[b.linedefined + 1] and
          b.activelines[b.lastlinedefined])
   assert(not b.activelines[b.linedefined] and
@@ -108,6 +110,7 @@ repeat
   assert(g(f) == 'a')
 until 1
 
+_USPACE[=[
 test([[if
 math.sin(1)
 then
@@ -116,6 +119,7 @@ else
   a=2
 end
 ]], {2,3,4,7})
+]=]
 
 test([[--
 if nil then
@@ -143,12 +147,14 @@ while a<=3 do
 end
 ]], {1,2,3,4,3,4,3,4,3,5})
 
+_USPACE[=[
 test([[while math.sin(1) do
   if math.sin(1)
   then break
   end
 end
 a=1]], {1,2,3,6})
+]=]
 
 test([[for i=1,3 do
   a=i
@@ -262,8 +268,10 @@ function f(a,b)
   assert(debug.setlocal(2, 3, "pera") == "AA".."AA")
   assert(debug.setlocal(2, 4, "maçã") == "B")
   x = debug.getinfo(2)
+_KBUG[[
   assert(x.func == g and x.what == "Lua" and x.name == 'g' and
          x.nups == 2 and string.find(x.source, "^@.*db%.lua$"))
+]]
   glob = glob+1
   assert(debug.getinfo(1, "l").currentline == L+1)
   assert(debug.getinfo(1, "l").currentline == L+2)

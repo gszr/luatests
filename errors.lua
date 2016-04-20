@@ -35,7 +35,9 @@ local function checksyntax (prog, extra, token, line)
   token = string.gsub(token, "(%p)", "%%%1")
   local pt = string.format([[^%%[string ".*"%%]:%d: .- near %s$]],
                            line, token)
+_KBUG[[
   assert(string.find(msg, pt))
+]]
   assert(string.find(msg, msg, 1, true))
 end
 
@@ -75,7 +77,9 @@ checkmessage("a = {} | 1", "bitwise operation")
 checkmessage("a = {} < 1", "attempt to compare")
 checkmessage("a = {} <= 1", "attempt to compare")
 
+_USPACE[[
 checkmessage("a=1; bbbb=2; a=math.sin(3)+bbbb(3)", "global 'bbbb'")
+]]
 checkmessage("a={}; do local a=1 end a:bbbb(3)", "method 'bbbb'")
 checkmessage("local a={}; a.bbbb(3)", "field 'bbbb'")
 assert(not string.find(doit"a={13}; local bbbb=1; a[bbbb](3)", "'bbbb'"))
@@ -104,8 +108,10 @@ checkmessage("aaa='2'; b=nil;x=aaa*b", "global 'b'")
 checkmessage("aaa={}; x=-aaa", "global 'aaa'")
 
 -- short circuit
+_USPACE[[
 checkmessage("a=1; local a,bbbb=2,3; a = math.sin(1) and bbbb(3)",
        "local 'bbbb'")
+]]
 checkmessage("a=1; local a,bbbb=2,3; a = bbbb(1) or a(3)", "local 'bbbb'")
 checkmessage("local a,b,c,f = 1,1,1; f((a and b) or c)", "local 'f'")
 checkmessage("local a,b,c = 1,1,1; ((a and b) or c)()", "call a number value")
@@ -153,12 +159,16 @@ _USPACE[[
   checkmessage("math.sin(io.input())", "(number expected, got FILE*)")
 ]]
   _ENV.XX = setmetatable({}, {__name = "My Type"})
+_KBUG[[
   checkmessage("io.input(XX)", "(FILE* expected, got My Type)")
+]]
   _ENV.XX = nil
 end
 
 -- global functions
+_KBUG[[
 checkmessage("(io.write or print){}", "io.write")
+]]
 checkmessage("(collectgarbage or print){}", "collectgarbage")
 
 -- errors in functions without debug info
@@ -189,6 +199,7 @@ checkmessage("local _ENV=_ENV;"..s.."; a = bbb + 1", "global 'bbb'")
 checkmessage(s.."; local t = {}; a = t.bbb + 1", "field 'bbb'")
 checkmessage(s.."; local t = {}; t:bbb()", "method 'bbb'")
 
+_USPACE[=[
 checkmessage([[aaa=9
 repeat until 3==3
 local x=math.sin(math.cos(3))
@@ -204,6 +215,7 @@ checkmessage([[
 local x,y = {},1
 if math.sin(1) == 0 then return 3 end    -- return
 x.a()]], "field 'a'")
+]=]
 
 checkmessage([[
 prefix = nil
@@ -214,9 +226,11 @@ while 1 do
   insert(prefix, a)
 end]], "global 'insert'")
 
+_USPACE[=[
 checkmessage([[  -- tail call
   return math.sin("a")
 ]], "'sin'")
+]=]
 
 checkmessage([[collectgarbage("nooption")]], "invalid option")
 
@@ -224,7 +238,9 @@ checkmessage([[x = print .. "a"]], "concatenate")
 checkmessage([[x = "a" .. false]], "concatenate")
 checkmessage([[x = {} .. 2]], "concatenate")
 
+_KBUG[[
 checkmessage("getmetatable(io.stdin).__gc()", "no value")
+]]
 
 checkmessage([[
 local Var
@@ -245,6 +261,7 @@ checkmessage("string.gsub('s', 's', setmetatable)", "'setmetatable'")
 
 -- tests for errors in coroutines
 
+_KBUG[[
 local function f (n)
   local c = coroutine.create(f)
   local a,b = coroutine.resume(c)
@@ -256,6 +273,7 @@ checkmessage("coroutine.yield()", "outside a coroutine")
 
 f = coroutine.wrap(function () table.sort({1,2,3}, coroutine.yield) end)
 checkerr("yield across", f)
+]]
 
 
 -- testing size of 'source' info; size of buffer for that info is
@@ -331,6 +349,7 @@ X=1;lineerror((p), 2)
 X=2;lineerror((p), 1)
 
 
+_KBUG[[
 if not _soft then
   -- several tests that exaust the Lua stack
   collectgarbage()
@@ -402,6 +421,7 @@ if not _soft then
   checkerr("too many results", f)
 
 end
+]]
 
 
 do
@@ -422,9 +442,11 @@ do
   assert(not res and msg == "X")
  
   -- 'assert' with no message
+_KBUG[[
   res, msg = pcall(function () assert(false) end)
   local line = string.match(msg, "%w+%.lua:(%d+): assertion failed!$")
   assert(tonumber(line) == debug.getinfo(1, "l").currentline - 2)
+]]
 
   -- 'assert' with non-string messages
   res, msg = pcall(assert, false, t)
@@ -475,6 +497,7 @@ end
 
 -- testing syntax limits
 
+_KBUG[=[
 local maxClevel = 200    -- LUAI_MAXCCALLS (in llimits.h)
 
 local function testrep (init, rep, close, repc)
@@ -499,6 +522,7 @@ testrep("local a; a=", "a^", "a", "")
 ]]
 
 checkmessage("a = f(x" .. string.rep(",x", 260) .. ")", "too many registers")
+]=]
 
 
 -- testing other limits
