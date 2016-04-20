@@ -24,6 +24,11 @@ local function exec(chunk, chunkname, env)
   return load(chunk, chunkname, "t", getlenv(env))()
 end
 
+-- _KBUG is used to mark chunks that expose bugs in kernel Lua
+-- perhaps it could do something useful -- e.g., save the chunk in a 
+-- file?
+function _KBUG(chunk) end
+
 -- _KSPACE and _USPACE are used to evaluate chunks of tests in kernel or user
 -- space, respectively; it should be clear what runs only in kernel space and
 -- what runs only in user space
@@ -38,9 +43,9 @@ end
 
 local oldpacksize = string.packsize
 function string.packsize(fmt)
-  if 'fmt' == 'f' then
+  if fmt == 'f' then
     return 1
-  elseif 'fmt' == 'd' then
+  elseif fmt == 'd' then
     return 2
   end
   return oldpacksize(fmt)
@@ -55,35 +60,32 @@ end
 --TODO temporary math functions
 --
 if _KERNEL then
-math = {}
-math.huge = 1000000
 math.floor = function(x) return x end
-math.maxinteger =  9223372036854775807
-math.mininteger = -9223372036854775808
-math.huge = math.maxinteger
-math.fmod = function(a, b) return a - (a//b) * b end
-math.pi = 3
-math.type = function(x) return "integer" end
-math.random = function() return 1 end
-
-function math.max(a, ...)
-  local args = {...}
-  if #args == 1 then
-    return a > args[1] and a or args[1]
-  end
-  return math.max(...)
-end
-
-function math.min(a, ...)
-  local args = {...}
-  if #args == 1 then
-    return a < args[1] and a or args[1]
-  end
-  return math.min(...)
-end
+math.pi    = 3
 
 math.sin = function(...) return x end
 math.cos = function(...) return x end
-
-
 end
+
+package = {}
+package.loaded = {}
+package.preload = {}
+
+package.loaded.os      = os
+package.loaded.io      = io
+package.loaded.math    = math
+package.loaded.debug   = debug
+package.loaded.string  = string
+package.loaded.package = package
+package.loaded.table   = table
+
+function require(mod)
+  if package.loaded[mod] then
+    return package.loaded[mod]
+  elseif package.preload[mod] then
+    return package.preload[mod]()
+  end
+  return modules[mod]
+end
+
+
