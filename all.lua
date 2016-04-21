@@ -1,4 +1,6 @@
+_KBUG[[
 #!../lua
+]]
 -- $Id: all.lua,v 1.94 2015/09/17 16:45:19 roberto Exp $
 
 local version = "Lua 5.3"
@@ -76,9 +78,14 @@ local T,print,format,write,assert,type,unpack,floor =
 
 -- use K for 1000 and M for 1000000 (not 2^10 -- 2^20)
 local function F (m)
+_USPACE[[
   local function round (m)
     m = m + 0.04999
     return format("%.1f", m)      -- keep one decimal digit
+  end
+]]
+  local function round(m)
+    return m
   end
   if m < 1000 then return m
   else
@@ -177,8 +184,15 @@ dofile('closure.lua')
 dofile('coroutine.lua')
 dofile('goto.lua', true)
 dofile('errors.lua')
+_USPACE[[
 dofile('math.lua')
+]]
+_USPACE[[
 dofile('sort.lua', true)
+]]
+_KSPACE[[
+dofile('sort.lua')
+]]
 dofile('bitwise.lua')
 assert(dofile('verybig.lua', true) == 10); collectgarbage()
 dofile('files.lua')
@@ -192,7 +206,9 @@ if #msgs > 0 then
 end
 
 -- no test module should define 'debug'
+_USPACE[[
 assert(debug == nil)
+]]
 
 local debug = require "debug"
 
@@ -228,7 +244,7 @@ end
 -- erase (almost) all globals
 print('cleaning all!!!!')
 for n in pairs(_G) do
-  if not ({___Glob = 1, tostring = 1})[n] then
+  if not ({___Glob = 1, tostring = 1, _USPACE = 1, _KERNEL = 1})[n] then
     _G[n] = nil
   end
 end
@@ -249,8 +265,12 @@ print(format("\n\ntotal time: %.2fs (wall time: %gs)\n", clocktime, walltime))
 if not usertests then
   lasttime = lasttime or clocktime    -- if no last time, ignore difference
   -- check whether current test time differs more than 5% from last time
+_USPACE[[
   local diff = (clocktime - lasttime) / lasttime
   local tolerance = 0.05    -- 5%
+]]
+  local diff = 100 - (lasttime * 100) / clocktime
+  local tolerance = 5 -- 5%
   if (diff >= tolerance or diff <= -tolerance) then
     print(format("WARNING: time difference from previous test: %+.1f%%",
                   diff * 100))
