@@ -4,7 +4,7 @@ RCS file: /cvsroot/src/external/mit/lua/dist/src/lauxlib.c,v
 retrieving revision 1.6
 diff -u -r1.6 lauxlib.c
 --- external/mit/lua/dist/src/lauxlib.c	28 Jan 2016 14:41:39 -0000	1.6
-+++ external/mit/lua/dist/src/lauxlib.c	20 Apr 2016 01:48:14 -0000
++++ external/mit/lua/dist/src/lauxlib.c	21 Apr 2016 17:13:56 -0000
 @@ -228,7 +228,6 @@
  }
  
@@ -83,7 +83,7 @@ RCS file: /cvsroot/src/external/mit/lua/dist/src/lauxlib.h,v
 retrieving revision 1.4
 diff -u -r1.4 lauxlib.h
 --- external/mit/lua/dist/src/lauxlib.h	28 Jan 2016 14:41:39 -0000	1.4
-+++ external/mit/lua/dist/src/lauxlib.h	20 Apr 2016 01:48:14 -0000
++++ external/mit/lua/dist/src/lauxlib.h	21 Apr 2016 17:13:56 -0000
 @@ -71,10 +71,8 @@
  LUALIB_API int (luaL_checkoption) (lua_State *L, int arg, const char *def,
                                     const char *const lst[]);
@@ -141,7 +141,7 @@ RCS file: /cvsroot/src/external/mit/lua/dist/src/lbaselib.c,v
 retrieving revision 1.6
 diff -u -r1.6 lbaselib.c
 --- external/mit/lua/dist/src/lbaselib.c	28 Jan 2016 14:41:39 -0000	1.6
-+++ external/mit/lua/dist/src/lbaselib.c	20 Apr 2016 01:48:14 -0000
++++ external/mit/lua/dist/src/lbaselib.c	21 Apr 2016 17:13:56 -0000
 @@ -289,7 +289,6 @@
  }
  
@@ -217,7 +217,7 @@ RCS file: /cvsroot/src/external/mit/lua/dist/src/linit.c,v
 retrieving revision 1.5
 diff -u -r1.5 linit.c
 --- external/mit/lua/dist/src/linit.c	28 Jan 2016 14:41:39 -0000	1.5
-+++ external/mit/lua/dist/src/linit.c	20 Apr 2016 01:48:14 -0000
++++ external/mit/lua/dist/src/linit.c	21 Apr 2016 17:13:56 -0000
 @@ -50,14 +50,10 @@
  #endif /* _KERNEL */
    {LUA_COLIBNAME, luaopen_coroutine},
@@ -239,7 +239,7 @@ RCS file: /cvsroot/src/external/mit/lua/dist/src/liolib.c,v
 retrieving revision 1.5
 diff -u -r1.5 liolib.c
 --- external/mit/lua/dist/src/liolib.c	28 Jan 2016 14:41:39 -0000	1.5
-+++ external/mit/lua/dist/src/liolib.c	20 Apr 2016 01:48:14 -0000
++++ external/mit/lua/dist/src/liolib.c	21 Apr 2016 17:13:56 -0000
 @@ -12,12 +12,14 @@
  #include "lprefix.h"
  
@@ -354,20 +354,27 @@ diff -u -r1.5 liolib.c
            case 'l':  /* line */
              success = read_line(L, f, 1);
              break;
-@@ -615,11 +636,13 @@
+@@ -614,6 +635,7 @@
+   int nargs = lua_gettop(L) - arg;
    int status = 1;
    for (; nargs--; arg++) {
-     if (lua_type(L, arg) == LUA_TNUMBER) {
 +#ifndef _KERNEL
+     if (lua_type(L, arg) == LUA_TNUMBER) {
        /* optimization: could be done exactly as for strings */
        int len = lua_isinteger(L, arg)
-                 ? fprintf(f, LUA_INTEGER_FMT, lua_tointeger(L, arg))
-                 : fprintf(f, LUA_NUMBER_FMT, lua_tonumber(L, arg));
+@@ -622,10 +644,11 @@
        status = status && (len > 0);
-+#endif
      }
      else {
++#endif
        size_t l;
+       const char *s = luaL_checklstring(L, arg, &l);
+       status = status && (fwrite(s, sizeof(char), l, f) == l);
+-    }
++//    }
+   }
+   if (status) return 1;  /* file handle already on stack top */
+   else return luaL_fileresult(L, status, NULL);
 @@ -644,6 +667,7 @@
  }
  
@@ -457,7 +464,7 @@ RCS file: /cvsroot/src/external/mit/lua/dist/src/lmathlib.c,v
 retrieving revision 1.5
 diff -u -r1.5 lmathlib.c
 --- external/mit/lua/dist/src/lmathlib.c	28 Jan 2016 14:41:39 -0000	1.5
-+++ external/mit/lua/dist/src/lmathlib.c	20 Apr 2016 01:48:14 -0000
++++ external/mit/lua/dist/src/lmathlib.c	21 Apr 2016 17:13:56 -0000
 @@ -12,8 +12,10 @@
  #include "lprefix.h"
  
@@ -619,7 +626,7 @@ RCS file: /cvsroot/src/external/mit/lua/dist/src/loslib.c,v
 retrieving revision 1.5
 diff -u -r1.5 loslib.c
 --- external/mit/lua/dist/src/loslib.c	28 Jan 2016 14:41:39 -0000	1.5
-+++ external/mit/lua/dist/src/loslib.c	20 Apr 2016 01:48:15 -0000
++++ external/mit/lua/dist/src/loslib.c	21 Apr 2016 17:13:56 -0000
 @@ -12,11 +12,16 @@
  #include "lprefix.h"
  
@@ -681,7 +688,7 @@ diff -u -r1.5 loslib.c
  
  
  static int os_tmpname (lua_State *L) {
-@@ -165,18 +180,34 @@
+@@ -165,18 +180,35 @@
  }
  
  
@@ -702,21 +709,22 @@ diff -u -r1.5 loslib.c
 +static int os_clock (lua_State *L) {
 +  struct rusage ru;
 +  long s;
- 
++
 +  getrusage1(curlwp->l_proc, RUSAGE_SELF, &ru);
-+  s = ru.ru_utime.tv_sec + ru.ru_stime.tv_sec + 
-+      ru.ru_utime.tv_usec / 1000000 + ru.ru_stime.tv_usec / 1000000;
++  s = ru.ru_utime.tv_sec * 1000 + ru.ru_stime.tv_sec * 1000 +
++      ru.ru_utime.tv_usec / 1000 + ru.ru_stime.tv_usec / 1000;
  
 +  lua_pushinteger(L, s);
 +  return 1;
 +}
 +#endif /* _KERNEL */
+ 
 +
 +#ifndef _KERNEL
  /*
  ** {======================================================
  ** Time/Date operations
-@@ -303,8 +334,10 @@
+@@ -303,8 +335,10 @@
    }
    return 1;
  }
@@ -727,7 +735,7 @@ diff -u -r1.5 loslib.c
  static int os_time (lua_State *L) {
    time_t t;
    if (lua_isnoneornil(L, 1))  /* called without args? */
-@@ -327,8 +360,21 @@
+@@ -327,18 +361,35 @@
    l_pushtime(L, t);
    return 1;
  }
@@ -745,11 +753,25 @@ diff -u -r1.5 loslib.c
 +#endif /* _KERNEL */
  
  
-+#ifndef _KERNEL
  static int os_difftime (lua_State *L) {
    time_t t1 = l_checktime(L, 1);
    time_t t2 = l_checktime(L, 2);
-@@ -362,18 +408,23 @@
++#ifndef _KERNEL
+   lua_pushnumber(L, (lua_Number)difftime(t1, t2));
++#else
++  lua_pushnumber(L, (lua_Number) t1 - t2);
++#endif
+   return 1;
+ }
+ 
+ /* }====================================================== */
+ 
+ 
++#ifndef _KERNEL
+ static int os_setlocale (lua_State *L) {
+   static const int cat[] = {LC_ALL, LC_COLLATE, LC_CTYPE, LC_MONETARY,
+                       LC_NUMERIC, LC_TIME};
+@@ -362,18 +413,25 @@
    if (L) exit(status);  /* 'if' to avoid warnings for unreachable 'return' */
    return 0;
  }
@@ -760,7 +782,9 @@ diff -u -r1.5 loslib.c
    {"clock",     os_clock},
 +#ifndef _KERNEL
    {"date",      os_date},
++#endif
    {"difftime",  os_difftime},
++#ifndef _KERNEL
    {"execute",   os_execute},
    {"exit",      os_exit},
    {"getenv",    os_getenv},
@@ -779,7 +803,7 @@ RCS file: /cvsroot/src/external/mit/lua/dist/src/luaconf.h,v
 retrieving revision 1.16
 diff -u -r1.16 luaconf.h
 --- external/mit/lua/dist/src/luaconf.h	28 Jan 2016 14:41:39 -0000	1.16
-+++ external/mit/lua/dist/src/luaconf.h	20 Apr 2016 01:48:15 -0000
++++ external/mit/lua/dist/src/luaconf.h	21 Apr 2016 17:13:56 -0000
 @@ -498,6 +498,14 @@
  #error "numeric float type not defined"
  
