@@ -1,0 +1,3 @@
+[submodule "kernel/libs"]
+	path = kernel/libs
+	url = git@github.com:salazar/libs.git
